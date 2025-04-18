@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Timer - Element Tracker v2</title>
+  <style>
+    /* --- Base Styles --- */
+    :root {
+        /* Color Scheme based on Mindful Palettes No. 164 */
+        --bg-dark-base: #003447; /* Dark Blue from Grad 4 */
+        --bg-medium-base: #49747F; /* Muted Teal/Blue-Gray from Grad 2/4 */
+        --bg-light-base: #6b919d; /* Lighter shade derived from medium */
+        --text-light: #F4EFEE; /* Light Off-White from Grad 1 */
+        --text-medium: #CDBBB9; /* Muted Beige/Gray from Grad 1/2/3 */
+        --accent-primary: #E34B26; /* Burnt Orange/Red from Grad 3/5 */
+        --accent-secondary: #F4EFEE; /* Light Off-White for secondary highlights */
+        --accent-success: #28a745; /* Keeping distinct green */
+        --accent-danger: #dc3545; /* Keeping distinct red */
+        --accent-info: #49747F; /* Using the medium bg color for info */
+        --border-color: #6b919d; /* Use light bg for borders */
+        --shadow-color: rgba(0,0,0,0.6); /* Darker shadow for contrast */
+        --font-main: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+        /* Specific Timer/Counter Colors */
+        --timer-bg: #003447; /* User requested */
+        --counter-bg: #441111; /* User requested */
+        /* Sidebar Background with Opacity */
+        --sidebar-bg: rgba(73, 116, 127, 0.9); /* Derived from --bg-medium-base with 90% alpha */
+        /* Scrollbar colors */
+        --scrollbar-bg: var(--bg-dark-base);
+        --scrollbar-thumb: var(--bg-light-base);
+        --scrollbar-thumb-hover: var(--text-medium);
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+      margin: 0; padding: 0; font-family: var(--font-main); background-color: var(--bg-dark-base);
+      color: var(--text-light); line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh;
+    }
+
+    h1 { text-align: center; color: var(--text-light); margin: 20px 0; flex-shrink: 0; font-weight: 300; }
+    h3 {
+        text-align: left; color: var(--accent-primary); margin: 0 0 1em 0; border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.6em; font-size: 1.1em; font-weight: 600;
+    }
+    .sidebar h3, .instructions-sidebar h3, .log-section > h3 { cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .sidebar h3 .section-title, .log-section > h3 .section-title { flex-grow: 1; }
+    .sidebar h3 .selected-item-name { font-size: 0.85em; font-weight: 400; color: var(--text-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; margin-left: 5px; }
+    .sidebar .collapsed > h3 .selected-item-name { display: inline; }
+    .sidebar h3::after, .log-section > h3::after { content: '▲'; font-size: 0.7em; margin-left: 10px; transition: transform 0.3s ease; flex-shrink: 0; color: var(--text-medium); }
+    .sidebar .collapsed > h3::after, .log-section.collapsed > h3::after { transform: rotate(180deg); }
+    .instructions-sidebar h3 { cursor: default; justify-content: center; text-align: center; }
+
+    /* --- Scrollbar Styles --- */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--scrollbar-bg); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 5px; border: 2px solid var(--scrollbar-bg); }
+    ::-webkit-scrollbar-thumb:hover { background-color: var(--scrollbar-thumb-hover); }
+    * { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg); }
+
+    /* --- Main Layout (3 Columns) --- */
+    .app-container { display: grid; grid-template-columns: 320px 1fr 280px; flex-grow: 1; width: 100%; max-width: 1800px; margin: 0 auto; gap: 25px; padding: 0 25px 25px 25px; }
+
+    /* --- Sidebars Common --- */
+    .sidebar, .instructions-sidebar { background-color: var(--sidebar-bg); padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px var(--shadow-color); overflow-y: scroll; height: fit-content; max-height: calc(100vh - 110px); border: 1px solid var(--border-color); backdrop-filter: blur(2px); }
+    .sidebar { flex-basis: 320px; }
+    .instructions-sidebar { flex-basis: 280px; }
+
+    /* --- Left Sidebar Specific --- */
+    .setup-section { margin-bottom: 20px; padding: 15px 0; border-bottom: 1px solid var(--border-color); box-shadow: none; background: none; width: 100%; max-width: none; }
+    .setup-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+    /* --- Main Content --- */
+    .main-content { display: flex; flex-direction: column; gap: 25px; min-width: 0; align-items: stretch; }
+
+    /* --- Collapsible Content --- */
+    .collapsible-content { overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out, margin 0.4s ease-out; max-height: 600px; padding-top: 15px; }
+    .collapsed > .collapsible-content { max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: -15px; border-top: none; }
+
+    /* --- Form Elements (Left Sidebar) --- */
+    .sidebar .input-group { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin-bottom: 15px; }
+    .sidebar .input-group label { margin-bottom: 3px; font-size: 0.9em; color: var(--text-medium); }
+    .sidebar .input-group input[type="text"], .sidebar .input-group select { min-width: 0; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 4px; border: 1px solid var(--border-color); background-color: var(--bg-dark-base); color: var(--text-light); font-size: 0.95em; }
+    .sidebar .input-group input:focus, .sidebar .input-group select:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 2px rgba(227, 75, 38, 0.3); }
+    .sidebar .input-group button { margin-left: 0; width: 100%; margin-top: 8px; padding: 10px 15px; border-radius: 4px; border: none; font-size: 0.95em; background-color: var(--accent-primary); color: white; cursor: pointer; transition: background-color 0.2s ease; font-weight: 600; }
+    .sidebar .input-group button:hover:not(:disabled) { background-color: #c74020; }
+    button:disabled { background-color: #555; cursor: not-allowed; opacity: 0.7; }
+    input:disabled, select:disabled { background-color: #444 !important; cursor: not-allowed !important; opacity: 0.6 !important; }
+
+    /* --- Display Info (Left Sidebar) --- */
+    .sidebar .display-item { margin-bottom: 8px; font-size: 0.9em; }
+    .sidebar .display-item .label { color: var(--text-medium); }
+    .sidebar .display-item .value { font-weight: 600; color: var(--text-light); margin-left: 8px; }
+
+    /* --- Timer/Counter Container Emphasis (NEW Stacked LAYOUT) --- */
+    .timer-container {
+        display: flex;
+        flex-direction: column; /* Stack counter, timer, button */
+        align-items: center; /* Center items horizontally */
+        gap: 20px; /* Gap between items */
+        padding: 25px;
+        background-color: var(--bg-medium);
+        border-radius: 10px;
+        box-shadow: 0 5px 20px var(--shadow-color);
+        width: 100%;
+        margin: 0;
+        border: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    /* Counter Display Area (Top Rectangle) */
+    .counter-display-area {
+        width: auto; /* Auto width */
+        min-width: 120px; /* Min width */
+        color: var(--text-light);
+        /* border: 1px solid var(--border-color); */ /* Removed border */
+        border-radius: 6px; /* Standard radius */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 8px 15px; /* Adjust padding */
+        margin-bottom: 15px; /* Space below counter */
+    }
+    #elementCounter {
+        font-size: 2.5em; /* Larger counter number */
+        font-weight: bold;
+        line-height: 1.1;
+    }
+    .counter-display-area .box-label {
+        font-size: 0.8em; /* Larger label */
+        font-weight: normal;
+        color: var(--text-medium);
+        margin-top: 2px; /* Adjust space */
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Timer Display Area (Center) */
+    .timer-display-area {
+        width: 100%; /* Full width */
+        max-width: 700px; /* Max width */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--timer-bg); /* User requested color */
+        color: var(--text-light);
+        font-family: var(--font-mono);
+        padding: 30px 20px; /* More padding */
+        border-radius: 10px;
+        min-height: 150px; /* Adjust height */
+    }
+    #elementTimer {
+        font-size: clamp(3rem, 12vw, 8rem); /* Large responsive font */
+        line-height: 1.1;
+        font-weight: bold;
+    }
+    .timer-display-area .box-label {
+        font-size: clamp(0.8rem, 2vw, 1.1rem);
+        font-weight: normal;
+        color: var(--text-medium);
+        margin-bottom: 10px; /* More space below label */
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Lap Button (Bottom Circle) */
+    .lap-button {
+        width: 150px; /* Adjust size */
+        height: 150px;
+        background-color: var(--accent-danger);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 1.2em; /* Adjust text size */
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        transition: background-color 0.2s ease;
+        padding: 5px;
+        text-align: center;
+        line-height: 1.2;
+        margin-top: 15px; /* Space above button */
+    }
+    .lap-button:hover:not(:disabled) { background-color: #c82333; }
+    .lap-button:disabled { background-color: #555; cursor: not-allowed; opacity: 0.7; }
+
+
+    /* --- Log Section --- */
+    .log-section { background-color: var(--bg-medium); padding: 25px; border-radius: 10px; box-shadow: 0 5px 20px var(--shadow-color); width: 100%; max-width: none; margin: 0; flex-grow: 1; display: flex; flex-direction: column; border: 1px solid var(--border-color); min-height: 150px; overflow: hidden; transition: flex-grow 0.4s ease, min-height 0.4s ease; }
+    .log-section.collapsed { min-height: 60px; flex-grow: 0; }
+    .log-section > h3 { margin-bottom: 10px; text-align: left; flex-shrink: 0; color: var(--text-light); }
+    .log-controls { margin-bottom: 10px; flex-shrink: 0; display: flex; gap: 10px; }
+    .log-controls button { padding: 4px 8px; font-size: 0.8em; background-color: var(--bg-light); color: var(--text-medium); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; }
+    .log-controls button:hover { background-color: var(--border-color); color: var(--text-light); }
+    #elementLog { list-style: none; padding: 0 10px 0 0; margin: 0; flex-grow: 1; overflow-y: scroll; background-color: transparent; border-radius: 0; border: none; max-height: 500px; }
+    .log-section.collapsed > #elementLog, .log-section.collapsed > .log-controls, .log-section.collapsed > .utility-buttons-container { display: none; }
+    .log-item { margin-bottom: 8px; border-radius: 4px; background-color: var(--bg-light); }
+    .log-sprint { border-left: 4px solid var(--accent-primary); }
+    .log-task { margin-left: 15px; border-left: 4px solid var(--accent-info); }
+    .log-header { padding: 10px 15px; cursor: pointer; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background-color: rgba(0, 0, 0, 0.1); border-bottom: 1px solid var(--border-color); border-radius: 4px 4px 0 0; gap: 10px; }
+    .log-header:hover { background-color: rgba(0, 0, 0, 0.2); }
+    .log-header .title { font-weight: 600; font-size: 1em; flex-shrink: 0; color: var(--text-light); }
+    .log-header .details { font-size: 0.8em; color: var(--text-medium); text-align: right; flex-grow: 1; }
+    .log-header .toggle-icon { margin-left: 10px; transition: transform 0.3s ease; display: inline-block; font-size: 0.8em; flex-shrink: 0; color: var(--text-medium); }
+    .log-item.collapsed > .log-header .toggle-icon { transform: rotate(-90deg); }
+    .log-content { padding: 10px 5px 10px 20px; max-height: 1000px; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; border-top: 1px solid var(--border-color); }
+    .log-item.collapsed > .log-content { max-height: 0; padding-top: 0; padding-bottom: 0; border-top: none; }
+    .log-element-item { padding: 8px 12px; margin-left: 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-left: 4px solid var(--accent-secondary); background-color: var(--bg-dark-base); }
+    .log-element-item .log-text { flex-grow: 1; word-wrap: break-word; font-size: 0.9em; }
+    .log-element-item .log-text .duration { font-weight: 600; color: var(--accent-secondary); margin-left: 5px;}
+    .log-element-item .log-timestamp { font-size: 0.8em; color: var(--text-medium); white-space: nowrap; }
+
+    /* --- Utility Buttons --- */
+    .utility-buttons-container { display: flex; gap: 15px; margin-top: 15px; flex-shrink: 0; }
+    .utility-button { flex-grow: 1; display: block; width: auto; margin: 0; padding: 12px; border-radius: 4px; border: none; font-size: 1em; font-weight: 600; cursor: pointer; text-align: center; transition: background-color 0.2s ease; }
+    .button-danger { background-color: var(--accent-danger); color: white; }
+    .button-danger:hover:not(:disabled) { background-color: #c82333; }
+    .button-info { background-color: var(--accent-info); color: white; }
+    .button-info:hover:not(:disabled) { background-color: #138496; }
+
+     /* --- Message Area --- */
+    #messageArea { padding: 12px; margin: 0 auto 20px auto; width: 90%; max-width: 1000px; border-radius: 6px; text-align: center; font-weight: bold; display: none; box-sizing: border-box; flex-shrink: 0; font-size: 0.95em; }
+    #messageArea.error { background-color: var(--accent-danger); color: white; display: block; }
+    #messageArea.success { background-color: var(--accent-success); color: white; display: block; }
+    #messageArea.info { background-color: var(--accent-info); color: white; display: block; }
+    #messageArea.warning { background-color: #ffc107; color: black; display: block; }
+
+    /* --- Instructions Sidebar --- */
+    .instructions-sidebar h4 { color: var(--accent-secondary); margin-top: 1.5em; margin-bottom: 0.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+    .instructions-sidebar p, .instructions-sidebar ul { font-size: 0.85em; color: var(--text-medium); margin-bottom: 1em; }
+    .instructions-sidebar ul { padding-left: 20px; }
+    .instructions-sidebar li { margin-bottom: 0.5em; }
+    .instructions-sidebar code { background-color: var(--bg-light); padding: 0.2em 0.4em; border-radius: 3px; font-family: var(--font-mono); font-size: 0.9em; color: var(--accent-primary); }
+
+    /* --- Responsive Design --- */
+    @media (max-width: 1200px) { .app-container { grid-template-columns: 300px 1fr 250px; gap: 20px; padding: 0 20px 20px 20px; } .sidebar { flex-basis: 300px; } .instructions-sidebar { flex-basis: 250px; } }
+    @media (max-width: 992px) { .app-container { grid-template-columns: 300px 1fr; grid-template-rows: auto auto; } .sidebar { grid-row: 1 / 2; grid-column: 1 / 2; } .main-content { grid-row: 1 / 2; grid-column: 2 / 3; } .instructions-sidebar { grid-row: 2 / 3; grid-column: 1 / 3; max-height: none; margin-top: 20px; } }
+    @media (max-width: 768px) {
+        .app-container { display: flex; flex-direction: column; padding: 0 15px 15px 15px; gap: 20px; }
+        .sidebar, .instructions-sidebar { flex: 0 0 auto; width: 100%; max-height: none; box-sizing: border-box; margin-bottom: 0; }
+        .instructions-sidebar { margin-top: 0; }
+        .main-content { width: 100%; box-sizing: border-box; }
+        .timer-container { flex-direction: column; padding: 20px; gap: 15px; } /* Stack vertically */
+        .timer-display-area { min-height: 120px; padding: 15px;}
+        .lap-button { order: 3; /* Place button last */ margin-top: 10px; width: 70px; height: 70px; font-size: 1.1em; }
+        .counter-display-area { order: 1; /* Place counter first */ width: auto; height: auto; border-radius: 6px; padding: 5px 10px; margin-bottom: 0; }
+        #elementCounter { font-size: 1.8em; }
+        .counter-display-area .box-label { font-size: 0.7em; margin-top: 0;}
+        #elementTimer { font-size: clamp(2.5rem, 10vw, 5rem); } /* Adjust font */
+        .timer-display-area { order: 2; } /* Timer in middle */
+        .log-section { min-height: auto; max-height: 40vh; }
+        #elementLog { max-height: 35vh; }
+        .utility-buttons-container { flex-direction: column; gap: 10px; }
+    }
+     @media (max-width: 480px) { /* Even smaller screens */
+         .timer-container { gap: 10px; padding: 15px;}
+         .lap-button { width: 60px; height: 60px; font-size: 1em;}
+         #elementTimer { font-size: clamp(2rem, 9vw, 4rem); }
+         #elementCounter { font-size: 1.5em; }
+         .counter-display-area .box-label { font-size: 0.6em;}
+     }
+
+  </style>
+</head>
+<body>
+  <h1>Task Timer - Element Tracker v2</h1>
+
+  <div id="messageArea"></div>
+
+  <div class="app-container">
+
+    <div class="sidebar">
+      <div class="setup-section" id="project-setup">
+        <h3 id="projectHeader">
+            <span class="section-title">Project</span>
+            <span class="selected-item-name" id="selectedProjectName"></span>
+        </h3>
+        <div class="collapsible-content">
+            <div class="input-group"> <label for="projectSelect">Select Existing:</label> <select id="projectSelect"></select> </div>
+            <div class="input-group"> <label for="projectName">Name:</label> <input type="text" id="projectName" placeholder="New or Selected Project Name"> </div>
+            <div class="input-group"> <label for="projectDesc">Description:</label> <input type="text" id="projectDesc" placeholder="Project Description"> </div>
+            <div class="input-group"> <button id="startProjectBtn" title="Create new project or load project name from input field">Start/Load Project</button> </div>
+        </div>
+        <div class="display-item"><span class="label">Started:</span> <span class="value" id="projectStart">-</span></div>
+        <div class="display-item"><span class="label">Total Time:</span> <span class="value" id="projectTotalTime">0h 0m 0s</span></div>
+      </div>
+
+      <div class="setup-section collapsed" id="sprint-setup">
+        <h3 id="sprintHeader">
+            <span class="section-title">Sprint</span>
+            <span class="selected-item-name" id="selectedSprintName"></span>
+        </h3>
+         <div class="collapsible-content">
+             <div class="input-group"> <label for="sprintSelect">Select Existing:</label> <select id="sprintSelect" disabled></select> </div>
+             <div class="input-group"> <label for="sprintName">Name:</label> <input type="text" id="sprintName" placeholder="New or Selected Sprint Name" disabled> </div>
+             <div class="input-group"> <button id="startSprintBtn" disabled title="Create new sprint or load sprint name from input field">Start/Load Sprint</button> </div>
+         </div>
+        <div class="display-item"><span class="label">Started:</span> <span class="value" id="sprintStart">-</span></div>
+        <div class="display-item"><span class="label">Total Time:</span> <span class="value" id="sprintTotalTime">0h 0m 0s</span></div>
+      </div>
+
+      <div class="setup-section collapsed" id="task-setup">
+        <h3 id="taskHeader">
+            <span class="section-title">Task</span>
+            <span class="selected-item-name" id="selectedTaskName"></span>
+        </h3>
+         <div class="collapsible-content">
+             <div class="input-group"> <label for="taskSelect">Select Existing:</label> <select id="taskSelect" disabled></select> </div>
+             <div class="input-group"> <label for="taskName">Name:</label> <input type="text" id="taskName" placeholder="New or Selected Task Name" disabled> </div>
+             <div class="input-group"> <button id="startTaskBtn" disabled title="Start timing first/next element for the selected/entered task">Start Task</button> </div>
+         </div>
+        <div class="display-item"><span class="label">Started:</span> <span class="value" id="taskStart">-</span></div>
+        <div class="display-item"><span class="label">Total Time:</span> <span class="value" id="taskTotalTime">0h 0m 0s</span></div>
+      </div>
+    </div> <div class="main-content">
+      <div class="timer-container">
+          <div class="counter-display-area"> <span id="elementCounter">0</span>
+              <span class="box-label">Elements</span>
+          </div>
+          <div class="timer-display-area"> <span class="box-label">Current Element Time</span>
+              <span id="elementTimer">0:00</span>
+          </div>
+          <button class="lap-button" id="completeElementBtn" title="Complete Element / Lap">Lap</button> </div>
+
+      <div class="log-section" id="log-section"> <h3 id="logHeader"> <span class="section-title">Project Log</span>
+              </h3>
+          <div class="collapsible-content"> <div class="log-controls">
+                  <button id="expandAllLogBtn">Expand All</button>
+                  <button id="collapseAllLogBtn">Collapse All</button>
+              </div>
+              <div id="elementLog"></div>
+              <div class="utility-buttons-container">
+                  <button id="clearLogBtn" class="utility-button button-danger">Clear Entire Log</button>
+                  <button id="downloadCSVBtn" class="utility-button button-info">Export Log as CSV</button>
+              </div>
+          </div>
+      </div>
+    </div> <div class="instructions-sidebar">
+        <h3>How To Use</h3>
+        <h4>Hierarchy</h4>
+        <p>Work is organized as: <code>Project</code> > <code>Sprint</code> > <code>Task</code> > <code>Element</code>.</p>
+        <h4>Setup Workflow</h4>
+        <ul> <li>Start with <strong>Project</strong>. Select existing or type name/desc & click <code>Start/Load Project</code>.</li> <li>Once project active, <strong>Sprint</strong> enables. Select or create/load sprint.</li> <li>Once sprint active, <strong>Task</strong> enables. Select or create/load task.</li> <li>Click section headers (Project, Sprint, Task) to expand/collapse. Selected name shows when collapsed.</li> </ul>
+        <h4>Timing Elements</h4>
+        <ul> <li>With task active, click <code>Start Task</code> to time first element.</li> <li>Timer shows time for <strong>current element</strong>.</li> <li>Click the red <code>Lap</code> button to <strong>complete</strong> current element.</li> <li>This logs time, updates totals, increments counter, & starts timer for <strong>next element</strong>.</li> </ul>
+         <h4>Controls Lock</h4>
+        <ul> <li>While timer runs, sidebar & utility buttons are disabled.</li> <li>Click <code>Lap</code> or refresh page (with warning) to enable controls.</li> <li><strong>Project Log</strong> remains interactive while timer runs.</li> </ul>
+        <h4>Project Log</h4>
+         <ul> <li>Shows Sprints, Tasks, & completed Elements for selected Project.</li> <li>Click Sprint/Task headers to expand/collapse. Use <code>Expand/Collapse All</code> buttons.</li> <li>Totals shown are sums of completed elements.</li> <li>Click main "Project Log" header to collapse/expand log section.</li> </ul>
+    </div> </div> <script>
+    // --- Global State ---
+    let elementCompletionCounter = 0;
+    let currentElementSeconds = 0;
+    let timerIntervalId = null;
+    let currentProject = null;
+    let currentSprint = null;
+    let currentTask = null;
+    let allLogData = [];
+
+    // --- DOM References ---
+    const elementTimerElement = document.getElementById('elementTimer');
+    const elementCounterElement = document.getElementById('elementCounter');
+    const taskTotalTimeElement = document.getElementById('taskTotalTime');
+    const sprintTotalTimeElement = document.getElementById('sprintTotalTime');
+    const projectTotalTimeElement = document.getElementById('projectTotalTime');
+    const taskStartElement = document.getElementById('taskStart');
+    const elementLogElement = document.getElementById('elementLog');
+    const projectSelect = document.getElementById('projectSelect');
+    const sprintSelect = document.getElementById('sprintSelect');
+    const taskSelect = document.getElementById('taskSelect');
+    const projectNameInput = document.getElementById('projectName');
+    const projectDescInput = document.getElementById('projectDesc');
+    const projectStartSpan = document.getElementById('projectStart');
+    const sprintNameInput = document.getElementById('sprintName');
+    const sprintStartSpan = document.getElementById('sprintStart');
+    const taskNameInput = document.getElementById('taskName');
+    const messageArea = document.getElementById('messageArea');
+    const startProjectBtn = document.getElementById('startProjectBtn');
+    const startSprintBtn = document.getElementById('startSprintBtn');
+    const startTaskBtn = document.getElementById('startTaskBtn');
+    const completeElementBtn = document.getElementById('completeElementBtn'); // Still refers to the button, even if class changed
+    const clearLogBtn = document.getElementById('clearLogBtn');
+    const downloadCSVBtn = document.getElementById('downloadCSVBtn');
+    const projectSetupSection = document.getElementById('project-setup');
+    const sprintSetupSection = document.getElementById('sprint-setup');
+    const taskSetupSection = document.getElementById('task-setup');
+    const projectHeader = document.getElementById('projectHeader');
+    const sprintHeader = document.getElementById('sprintHeader');
+    const taskHeader = document.getElementById('taskHeader');
+    const selectedProjectNameSpan = document.getElementById('selectedProjectName');
+    const selectedSprintNameSpan = document.getElementById('selectedSprintName');
+    const selectedTaskNameSpan = document.getElementById('selectedTaskName');
+    const expandAllLogBtn = document.getElementById('expandAllLogBtn');
+    const collapseAllLogBtn = document.getElementById('collapseAllLogBtn');
+    const logSection = document.getElementById('log-section');
+    const logHeader = document.getElementById('logHeader');
+
+
+    // --- Utility Functions ---
+    function clearMessage() { messageArea.textContent = ''; messageArea.className = ''; messageArea.style.display = 'none'; }
+    function showMessage(text, type = 'info') { messageArea.textContent = text; messageArea.className = type; messageArea.style.display = 'block'; }
+    function formatTimeDetailed(sec) { const s = Math.max(0, Math.floor(sec)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60; return `${h}h ${m}m ${r}s`; }
+    function formatTimeSimple(sec) { const s = Math.max(0, Math.floor(sec)), m = Math.floor(s / 60), r = s % 60; return `${m}:${r.toString().padStart(2, '0')}`; }
+    function parseTimeSimple(str) { if (!str || typeof str !== 'string') return 0; const p = str.split(':'); if (p.length === 2) { const m = parseInt(p[0], 10), s = parseInt(p[1], 10); if (!isNaN(m) && !isNaN(s)) return m * 60 + s; } return 0; }
+    function formatDisplayDate(ds) { if (!ds) return '-'; try { const d = new Date(ds); if (!isNaN(d.getTime())) return d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }); } catch (e) { console.warn("Error formatting date:", ds, e); } return ds.length > 16 ? ds.substring(0, 16) + '...' : ds; }
+    function populateSelect(el, opts, ph, selVal = "") { const uOpts = [...new Set(opts)].filter(o => o); const curVal = el.value; el.innerHTML = `<option value="">${ph}</option>`; uOpts.forEach(o => { const opt = document.createElement('option'); opt.value = opt.textContent = o; el.appendChild(opt); }); if (uOpts.includes(curVal) && !selVal) { el.value = curVal; } else { el.value = selVal; } if (el.id !== 'projectSelect') { el.disabled = !uOpts.length && !el.value; } }
+    async function saveLogEntry(logEntry) { try { const r = await fetch('/save-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logEntry) }); if (!r.ok) { let et = `Server ${r.status}`; try { et = await r.text(); } catch (e) {} throw new Error(et); } const d = await r.json(); console.log('Log entry saved:', logEntry.elementType || 'element', d); return true; } catch (err) { console.error(`Save fail (${logEntry.elementType || 'element'}):`, err); showMessage(`Save failed: ${err.message}`, 'error'); return false; } }
+
+    // --- Collapse/Expand Logic ---
+    function collapseSection(sectionElement) { if (sectionElement && !sectionElement.classList.contains('collapsed')) { sectionElement.classList.add('collapsed'); } }
+    function expandSection(sectionElement) { if (sectionElement && sectionElement.classList.contains('collapsed')) { sectionElement.classList.remove('collapsed'); } }
+    function toggleSection(sectionElement) { if (sectionElement) { sectionElement.classList.toggle('collapsed'); } }
+
+    // --- Core Logic Functions ---
+    function calculateTotalSecondsFromLog(level, name, sprintName = null, projectName = null) { let t = 0; try { t = allLogData.reduce((a, e) => { let m = false; if (e && e.elementType === 'element' && e.status === 'completed' && typeof e.elementDurationSeconds === 'number') { if (level === 'project' && e.project === name) m = true; else if (level === 'sprint' && e.project === projectName && e.sprint === name) m = true; else if (level === 'task' && e.project === projectName && e.sprint === sprintName && e.task === name) m = true; } return m ? a + e.elementDurationSeconds : a; }, 0); } catch(e) { console.error("Calc err:", e); } return t; }
+    function calculateTaskCompletedElements(proj, spr, tsk) { return allLogData.reduce((a, e) => (e && e.project === proj && e.sprint === spr && e.task === tsk && e.elementType === 'element' && e.status === 'completed') ? a + 1 : a, 0); }
+    function findEarliestStart(type, name, sprName = null, projName = null) { let eSpecStr = null, eSpecDt = null, eOverStr = null, eOverDt = null; findEarliestStart.loggedInvalid = findEarliestStart.loggedInvalid || new Set(); allLogData.forEach(e => { if (!e) return; let isM = false, specF = null, creatF = null; if (type === 'project' && e.project === name) { isM = true; specF = 'projectStarted'; creatF = 'project_creation'; } else if (type === 'sprint' && e.project === projName && e.sprint === name) { isM = true; specF = 'sprintStarted'; creatF = 'sprint_creation'; } else if (type === 'task' && e.project === projName && e.sprint === sprName && e.task === name) { isM = true; specF = 'taskStarted'; creatF = 'task_creation'; } if (isM) { let tsChk = null; if (e.hasOwnProperty(specF) && typeof e[specF] === 'string' && e[specF]) { tsChk = e[specF]; } else if (e.elementType === creatF && e.timestamp) { tsChk = e.timestamp; } if (tsChk) { try { const d = new Date(tsChk); if (!isNaN(d.getTime()) && (!eSpecDt || d < eSpecDt)) { eSpecDt = d; eSpecStr = tsChk; } else if (isNaN(d.getTime())) { logInvDtWarn(tsChk); } } catch (er) {} } if (e.hasOwnProperty('timestamp') && typeof e.timestamp === 'string') { const ts = e.timestamp; try { const d = new Date(ts); if (!isNaN(d.getTime()) && (!eOverDt || d < eOverDt)) { eOverDt = d; eOverStr = ts; } else if (isNaN(d.getTime())) { logInvDtWarn(ts); } } catch (er) {} } } }); return eSpecStr || eOverStr || ''; }
+    function logInvDtWarn(ts) { if (!findEarliestStart.loggedInvalid.has(ts)){ console.warn("Invalid date format in log:", ts); findEarliestStart.loggedInvalid.add(ts); } }
+
+    /** Updates the hierarchical log display for the current project */
+    function updateHierarchicalLogDisplay() {
+        elementLogElement.innerHTML = '';
+        if (!currentProject || !allLogData) { elementLogElement.innerHTML = '<div style="text-align: center; color: var(--text-medium); padding: 20px;">Select a project to view its log.</div>'; return; }
+        const projectLogs = allLogData.filter(entry => entry && entry.project === currentProject.name);
+        if (projectLogs.length === 0) { elementLogElement.innerHTML = '<div style="text-align: center; color: var(--text-medium); padding: 20px;">No log entries found for this project.</div>'; return; }
+        const sprintsMap = new Map();
+        projectLogs.forEach(entry => { if (!entry.sprint) return; if (!sprintsMap.has(entry.sprint)) { sprintsMap.set(entry.sprint, { tasks: new Map(), sprintStarted: null, totalSeconds: 0 }); } const sprintGroup = sprintsMap.get(entry.sprint); if (!sprintGroup.sprintStarted && entry.hasOwnProperty('sprintStarted') && entry.sprintStarted) { sprintGroup.sprintStarted = entry.sprintStarted; } else if (!sprintGroup.sprintStarted && entry.elementType === 'sprint_creation' && entry.timestamp) { sprintGroup.sprintStarted = entry.timestamp; } if (entry.task && entry.elementType === 'element' && entry.status === 'completed') { if (!sprintGroup.tasks.has(entry.task)) { sprintGroup.tasks.set(entry.task, { elements: [], taskStarted: null, totalSeconds: 0 }); } const taskGroup = sprintGroup.tasks.get(entry.task); taskGroup.elements.push(entry); taskGroup.totalSeconds += entry.elementDurationSeconds || 0; if (!taskGroup.taskStarted && entry.hasOwnProperty('taskStarted') && entry.taskStarted) { taskGroup.taskStarted = entry.taskStarted; } } });
+        sprintsMap.forEach((sprintGroup, sprintName) => { sprintGroup.totalSeconds = Array.from(sprintGroup.tasks.values()).reduce((sum, task) => sum + task.totalSeconds, 0); sprintGroup.tasks.forEach((taskGroup, taskName) => { if (!taskGroup.taskStarted) { taskGroup.taskStarted = findEarliestStart('task', taskName, sprintName, currentProject.name); } }); if (!sprintGroup.sprintStarted) { sprintGroup.sprintStarted = findEarliestStart('sprint', sprintName, currentProject.name); } });
+        // Generate HTML
+        sprintsMap.forEach((sprintGroup, sprintName) => {
+            const sprintItem = document.createElement('div');
+            sprintItem.className = 'log-item log-sprint collapsed';
+            const sprintHeaderDiv = document.createElement('div');
+            sprintHeaderDiv.className = 'log-header';
+            sprintHeaderDiv.innerHTML = `<span class="title">Sprint: ${sprintName}</span><span class="details">(Total: ${formatTimeDetailed(sprintGroup.totalSeconds)})</span><span class="toggle-icon">▼</span>`;
+            sprintHeaderDiv.onclick = () => sprintItem.classList.toggle('collapsed');
+            const sprintContentDiv = document.createElement('div');
+            sprintContentDiv.className = 'log-content';
+            sprintGroup.tasks.forEach((taskGroup, taskName) => {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'log-item log-task collapsed';
+                const taskHeaderDiv = document.createElement('div');
+                taskHeaderDiv.className = 'log-header';
+                taskHeaderDiv.innerHTML = `<span class="title">Task: ${taskName}</span><span class="details">(Total: ${formatTimeDetailed(taskGroup.totalSeconds)}) (${taskGroup.elements.length} Elems)</span><span class="toggle-icon">▼</span>`;
+                taskHeaderDiv.onclick = (e) => { e.stopPropagation(); taskItem.classList.toggle('collapsed'); };
+                const taskContentDiv = document.createElement('div');
+                taskContentDiv.className = 'log-content';
+                taskGroup.elements.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                taskGroup.elements.forEach((element, index) => {
+                    const elementItem = document.createElement('div');
+                    elementItem.className = 'log-element-item';
+                    elementItem.innerHTML = `<span class="log-text">Element ${index + 1}: <span class="duration">${element.duration || 'N/A'}</span></span><span class="log-timestamp">${formatDisplayDate(element.timestamp)}</span>`;
+                    taskContentDiv.appendChild(elementItem);
+                });
+                taskItem.appendChild(taskHeaderDiv);
+                taskItem.appendChild(taskContentDiv);
+                sprintContentDiv.appendChild(taskItem);
+            });
+            sprintItem.appendChild(sprintHeaderDiv);
+            sprintItem.appendChild(sprintContentDiv);
+            elementLogElement.appendChild(sprintItem);
+        });
+    }
+
+
+    /** Resets Sprint UI and state */
+    function resetSprintUI() {
+        currentSprint = null;
+        sprintNameInput.value = '';
+        sprintStartSpan.textContent = '-';
+        sprintTotalTimeElement.textContent = formatTimeDetailed(0);
+        selectedSprintNameSpan.textContent = '';
+        populateSelect(sprintSelect, [], '-- Select Sprint --', "");
+        const projectSelected = !!currentProject;
+        sprintSelect.disabled = !projectSelected;
+        sprintNameInput.disabled = !projectSelected;
+        startSprintBtn.disabled = !projectSelected;
+        startSprintBtn.title = projectSelected ? "Create new sprint or load sprint name from input field" : "Select a project first";
+        collapseSection(sprintSetupSection);
+        resetTaskUI();
+    }
+
+    /** Resets Task UI and state */
+    function resetTaskUI() {
+        currentTask = null;
+        taskNameInput.value = '';
+        taskStartElement.textContent = '-';
+        taskTotalTimeElement.textContent = formatTimeDetailed(0);
+        selectedTaskNameSpan.textContent = '';
+        elementCompletionCounter = 0;
+        elementCounterElement.textContent = '0';
+        populateSelect(taskSelect, [], '-- Select Task --', "");
+        const sprintSelected = !!currentSprint;
+        taskSelect.disabled = !sprintSelected;
+        taskNameInput.disabled = !sprintSelected;
+        startTaskBtn.disabled = true; // Start task always disabled on reset
+        startTaskBtn.title = sprintSelected ? "Select or enter a task first" : "Select a sprint first";
+        // Do not collapse task section on reset
+        // collapseSection(taskSetupSection);
+        stopTimer(false);
+        updateHierarchicalLogDisplay(); // Update log display
+    }
+
+    /** Stops the element timer and enables/disables controls */
+    function stopTimer(showAlert = true) {
+        if (timerIntervalId) {
+            clearInterval(timerIntervalId);
+            timerIntervalId = null;
+            if (showAlert) { showMessage("Timer stopped.", 'info'); }
+        }
+        // Always update control states when timer stops
+        setControlsDisabled(false); // Re-enable controls based on context
+    }
+
+    /** Enables/disables controls based on timer state */
+    function setControlsDisabled(isDisabled) {
+        const timerRunningReason = "Stop the timer first to change context or perform other actions.";
+        const projectButtonTitle = isDisabled ? timerRunningReason : projectSelect.value ? "Project loaded via selection. Use input field to create new." : "Create new project or load project name from input field";
+        const sprintButtonTitle = isDisabled ? timerRunningReason : !currentProject ? "Select a project first" : sprintSelect.value ? "Sprint loaded via selection. Use input field to create new." : "Create new sprint or load sprint name from input field";
+        const taskButtonTitle = isDisabled ? timerRunningReason : currentTask ? "Start timing first/next element for this task" : "Select or enter a task first";
+        const otherButtonTitle = isDisabled ? timerRunningReason : "";
+
+        projectSelect.disabled = isDisabled;
+        projectNameInput.disabled = isDisabled;
+        projectDescInput.disabled = isDisabled;
+        sprintSelect.disabled = isDisabled || !currentProject;
+        sprintNameInput.disabled = isDisabled || !currentProject;
+        taskSelect.disabled = isDisabled || !currentSprint;
+        taskNameInput.disabled = isDisabled || !currentSprint;
+
+        startProjectBtn.disabled = isDisabled || (!!projectSelect.value);
+        startProjectBtn.title = projectButtonTitle;
+        startSprintBtn.disabled = isDisabled || !currentProject || (!!sprintSelect.value);
+        startSprintBtn.title = sprintButtonTitle;
+        startTaskBtn.disabled = isDisabled || !currentTask;
+        startTaskBtn.title = taskButtonTitle;
+        clearLogBtn.disabled = isDisabled;
+        clearLogBtn.title = otherButtonTitle;
+        downloadCSVBtn.disabled = isDisabled;
+        downloadCSVBtn.title = otherButtonTitle;
+
+        // Explicitly set complete button state based ONLY on timerIntervalId
+        completeElementBtn.disabled = !timerIntervalId;
+        completeElementBtn.title = timerIntervalId ? "Complete Element / Lap" : "Start timer first";
+
+        projectHeader.style.pointerEvents = isDisabled ? 'none' : 'auto';
+        sprintHeader.style.pointerEvents = isDisabled ? 'none' : 'auto';
+        taskHeader.style.pointerEvents = isDisabled ? 'none' : 'auto';
+        logHeader.style.pointerEvents = isDisabled ? 'none' : 'auto'; // Also disable log collapse when timing
+
+        if (isDisabled) { showMessage("Timer running. Stop timer to change project/sprint/task or perform other actions.", "warning"); }
+        else { if (messageArea.textContent.startsWith("Timer running")) { clearMessage(); } }
+    }
+
+
+    // --- Event Handlers ---
+
+    /** Handles Project dropdown change */
+    function handleProjectChange() {
+        clearMessage();
+        const selectedProjectName = projectSelect.value;
+        projectNameInput.value = selectedProjectName;
+
+        if (selectedProjectName) {
+            const projData = allLogData.filter(e => e && e.project === selectedProjectName);
+            const projectStartTime = findEarliestStart('project', selectedProjectName);
+            const projectTotalSecs = calculateTotalSecondsFromLog('project', selectedProjectName);
+            const projectDesc = projData.find(e => e.projectDescription)?.projectDescription || '';
+
+            currentProject = { name: selectedProjectName, description: projectDesc, started: projectStartTime, totalSeconds: projectTotalSecs };
+
+            projectDescInput.value = currentProject.description;
+            projectStartSpan.textContent = formatDisplayDate(currentProject.started);
+            projectTotalTimeElement.textContent = formatTimeDetailed(currentProject.totalSeconds);
+            selectedProjectNameSpan.textContent = `- ${currentProject.name}`;
+
+            const sprints = projData.map(e => e.sprint).filter(s => s);
+            populateSelect(sprintSelect, sprints, '-- Select Sprint --');
+            sprintNameInput.disabled = false;
+            startProjectBtn.disabled = true;
+            startProjectBtn.title = "Project loaded via selection. Use input field to create new.";
+            startSprintBtn.disabled = false;
+            startSprintBtn.title = "Create new sprint or load sprint name from input field";
+            sprintSelect.disabled = false;
+
+            resetTaskUI();
+            collapseSection(projectSetupSection);
+            expandSection(sprintSetupSection);
+
+        } else {
+             currentProject = null;
+             projectDescInput.value = '';
+             projectStartSpan.textContent = '-';
+             projectTotalTimeElement.textContent = formatTimeDetailed(0);
+             selectedProjectNameSpan.textContent = '';
+             startProjectBtn.disabled = false;
+             startProjectBtn.title = "Create new project or load project name from input field";
+             resetSprintUI();
+             expandSection(projectSetupSection);
+        }
+         updateHierarchicalLogDisplay();
+    }
+
+    /** Handles Sprint dropdown change */
+    function handleSprintChange() {
+        clearMessage();
+        const selectedSprintName = sprintSelect.value;
+        sprintNameInput.value = selectedSprintName;
+
+        try {
+            if (selectedSprintName && currentProject) {
+                const sprintStartTime = findEarliestStart('sprint', selectedSprintName, currentProject.name);
+                const sprintTotalSecs = calculateTotalSecondsFromLog('sprint', selectedSprintName, null, currentProject.name);
+
+                currentSprint = { name: selectedSprintName, started: sprintStartTime, totalSeconds: sprintTotalSecs };
+
+                sprintStartSpan.textContent = formatDisplayDate(currentSprint.started);
+                sprintTotalTimeElement.textContent = formatTimeDetailed(currentSprint.totalSeconds);
+                selectedSprintNameSpan.textContent = `- ${currentSprint.name}`;
+
+                startSprintBtn.disabled = true;
+                startSprintBtn.title = "Sprint loaded via selection. Use input field to create new.";
+
+                resetTaskUI();
+
+                const tasksForSprint = allLogData
+                    .filter(e => e && e.project === currentProject.name && e.sprint === selectedSprintName && e.task)
+                    .map(e => e.task)
+                    .filter(taskName => taskName && !taskName.startsWith('AUTO_SAVE_'));
+                populateSelect(taskSelect, tasksForSprint, '-- Select Task --');
+                taskNameInput.disabled = false;
+                startTaskBtn.disabled = !taskSelect.value && !taskNameInput.value.trim();
+                startTaskBtn.title = taskSelect.value ? "Start timing first/next element for this task" : "Select or enter a task first";
+                taskSelect.disabled = false;
+
+                collapseSection(sprintSetupSection);
+                expandSection(taskSetupSection); // Expand task section
+
+            } else {
+                 resetSprintUI();
+                 selectedSprintNameSpan.textContent = '';
+                 if (currentProject) {
+                     startSprintBtn.disabled = false;
+                     startSprintBtn.title = "Create new sprint or load sprint name from input field";
+                 }
+                 expandSection(sprintSetupSection);
+                 collapseSection(taskSetupSection);
+            }
+        } catch (error) {
+            console.error("Error in handleSprintChange:", error);
+            showMessage(`An error occurred while loading sprint details: ${error.message}`, 'error');
+            resetSprintUI();
+        } finally {
+             updateHierarchicalLogDisplay();
+        }
+    }
+
+
+    /** Handles Task dropdown change */
+    function handleTaskChange() {
+        clearMessage();
+        const selectedTaskName = taskSelect.value;
+        taskNameInput.value = selectedTaskName;
+
+        if (selectedTaskName && currentProject && currentSprint) {
+            const taskStartTime = findEarliestStart('task', selectedTaskName, currentSprint.name, currentProject.name);
+            const taskTotalSecs = calculateTotalSecondsFromLog('task', selectedTaskName, currentSprint.name, currentProject.name);
+            const taskCompletedElements = calculateTaskCompletedElements(currentProject.name, currentSprint.name, selectedTaskName);
+
+            currentTask = { name: selectedTaskName, started: taskStartTime, totalSeconds: taskTotalSecs };
+            elementCompletionCounter = taskCompletedElements;
+
+            taskStartElement.textContent = formatDisplayDate(currentTask.started);
+            taskTotalTimeElement.textContent = formatTimeDetailed(currentTask.totalSeconds);
+            elementCounterElement.textContent = elementCompletionCounter;
+            selectedTaskNameSpan.textContent = `- ${currentTask.name}`;
+
+            stopTimer(false);
+            currentElementSeconds = 0;
+            elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+            startTaskBtn.disabled = false;
+            startTaskBtn.title = "Start timing first/next element for this task";
+
+            // Do NOT collapse task section automatically
+            expandSection(taskSetupSection); // Ensure it's expanded
+
+        } else {
+             resetTaskUI();
+             selectedTaskNameSpan.textContent = '';
+             startTaskBtn.disabled = true;
+             startTaskBtn.title = "Select or enter a task first";
+             expandSection(taskSetupSection); // Keep expanded if no task selected
+        }
+         updateHierarchicalLogDisplay();
+    }
+
+    /** Handles Start/Load Project button click */
+    async function handleStartProject() {
+        clearMessage();
+        const name = projectNameInput.value.trim();
+        const desc = projectDescInput.value.trim();
+        if (!name) { showMessage('Project name required.', 'error'); return; }
+
+        const existingProject = allLogData.some(entry => entry && entry.project === name);
+
+        if (existingProject) {
+            if (projectSelect.value !== name) {
+                 projectSelect.value = name;
+                 projectSelect.dispatchEvent(new Event('change'));
+            } else {
+                 if (currentProject && currentProject.description !== desc) {
+                    currentProject.description = desc;
+                    projectDescInput.value = desc;
+                    console.log("Project description updated locally for:", name);
+                    showMessage(`Project '${name}' description updated locally (not saved).`, 'info');
+                 } else {
+                    showMessage(`Project '${name}' is already selected.`, 'info');
+                 }
+                 startProjectBtn.disabled = true;
+                 startProjectBtn.title = "Project loaded. Use dropdown or input field to change/create.";
+                 collapseSection(projectSetupSection);
+                 expandSection(sprintSetupSection);
+            }
+        } else {
+            // Create New Project
+            const startTime = new Date().toISOString();
+            currentProject = { name, description: desc, started: startTime, totalSeconds: 0 };
+
+            projectNameInput.value = name;
+            projectDescInput.value = desc;
+            projectStartSpan.textContent = formatDisplayDate(startTime);
+            projectTotalTimeElement.textContent = formatTimeDetailed(0);
+            selectedProjectNameSpan.textContent = `- ${currentProject.name}`;
+
+            const option = document.createElement('option');
+            option.value = option.textContent = name;
+            projectSelect.appendChild(option);
+            projectSelect.value = name;
+
+            resetSprintUI();
+
+            sprintSelect.disabled = false;
+            sprintNameInput.disabled = false;
+            startSprintBtn.disabled = false;
+            startSprintBtn.title = "Create new sprint or load sprint name from input field";
+            startProjectBtn.disabled = true; // Disable after creation
+            startProjectBtn.title = "Project created. Use dropdown or input field to change.";
+
+            collapseSection(projectSetupSection);
+            expandSection(sprintSetupSection);
+
+            const creationLog = {
+                project: currentProject.name, projectDescription: currentProject.description,
+                projectStarted: currentProject.started, timestamp: startTime,
+                elementType: 'project_creation', status: 'created'
+            };
+            allLogData.push(creationLog);
+            const saved = await saveLogEntry(creationLog);
+            if (saved) { showMessage(`New project '${name}' created and saved. Start a sprint.`, 'success'); }
+            else { showMessage(`New project '${name}' created locally. Save failed.`, 'error'); }
+            updateHierarchicalLogDisplay();
+        }
+    }
+
+     /** Handles Start/Load Sprint button click */
+    async function handleStartSprint() {
+        clearMessage();
+        const name = sprintNameInput.value.trim();
+        if (!name) { showMessage('Sprint name required.', 'error'); return; }
+        if (!currentProject) { showMessage('Please select or start a project first.', 'error'); return; }
+
+        const existingSprint = allLogData.some(e => e && e.project === currentProject.name && e.sprint === name);
+
+        if (existingSprint) {
+            if (sprintSelect.value !== name) {
+                sprintSelect.value = name;
+                sprintSelect.dispatchEvent(new Event('change'));
+            } else {
+                 handleSprintChange();
+                 showMessage(`Sprint '${name}' is already selected, refreshing data.`, 'info');
+                 startSprintBtn.disabled = true;
+                 startSprintBtn.title = "Sprint loaded. Use dropdown or input field to change/create.";
+                 collapseSection(sprintSetupSection);
+                 expandSection(taskSetupSection);
+            }
+        } else {
+            // Create New Sprint
+            const startTime = new Date().toISOString();
+            currentSprint = { name, started: startTime, totalSeconds: 0 };
+
+            sprintNameInput.value = name;
+            sprintStartSpan.textContent = formatDisplayDate(startTime);
+            sprintTotalTimeElement.textContent = formatTimeDetailed(0);
+            selectedSprintNameSpan.textContent = `- ${currentSprint.name}`;
+
+            resetTaskUI();
+
+            taskSelect.disabled = false;
+            taskNameInput.disabled = false;
+            startTaskBtn.disabled = true; // Start Task disabled until task selected/entered
+            startTaskBtn.title = "Select or enter a task first";
+
+            const option = document.createElement('option');
+            option.value = option.textContent = name;
+            sprintSelect.appendChild(option);
+            sprintSelect.value = name;
+
+            startSprintBtn.disabled = true; // Disable after creation
+            startSprintBtn.title = "Sprint created. Use dropdown or input field to change.";
+
+            collapseSection(sprintSetupSection);
+            expandSection(taskSetupSection);
+
+            const creationLog = {
+                project: currentProject.name, projectStarted: currentProject.started,
+                sprint: currentSprint.name, sprintStarted: currentSprint.started,
+                timestamp: startTime, elementType: 'sprint_creation', status: 'created'
+            };
+            allLogData.push(creationLog);
+            const saved = await saveLogEntry(creationLog);
+            if (saved) { showMessage(`New sprint '${name}' created and saved. Select or enter a task.`, 'success'); }
+            else { showMessage(`New sprint '${name}' created locally. Save failed.`, 'error'); }
+            updateHierarchicalLogDisplay();
+        }
+    }
+
+    /** Handles Start Task button click */
+    function handleStartTask() {
+        clearMessage();
+        const taskName = taskNameInput.value.trim();
+        if (!taskName) { showMessage("Please enter or select a task name.", 'error'); return; }
+        if (!currentProject || !currentSprint) { showMessage("Please select a project and sprint first.", 'error'); return; }
+
+        if (!currentTask || taskName !== currentTask.name) {
+             const taskExistsInDropdown = Array.from(taskSelect.options).some(opt => opt.value === taskName);
+             if (!taskExistsInDropdown) {
+                 const option = document.createElement('option');
+                 option.value = option.textContent = taskName;
+                 taskSelect.appendChild(option);
+             }
+             taskSelect.value = taskName;
+             handleTaskChange(); // Load/initialize task state
+             setTimeout(() => { proceedWithTimerStart(taskName); }, 50);
+             return;
+        }
+        proceedWithTimerStart(taskName);
+    }
+
+    /** Helper to start the timer interval */
+    function proceedWithTimerStart(taskName) {
+         if (!currentTask || currentTask.name !== taskName) {
+             console.error("Task context mismatch, cannot start timer.");
+             showMessage("Error setting task context. Please try selecting the task again.", 'error');
+             return;
+         }
+
+        stopTimer(false); // Stop any previous timer
+
+        if (!currentTask.started) {
+            currentTask.started = new Date().toISOString();
+            taskStartElement.textContent = formatDisplayDate(currentTask.started);
+            // Optionally save a 'task_creation' event here
+        }
+        selectedTaskNameSpan.textContent = `- ${currentTask.name}`;
+
+        currentElementSeconds = 0;
+        elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+
+        // Disable controls, enable complete button
+        setControlsDisabled(true); // Disables other controls
+        completeElementBtn.disabled = false; // Explicitly enable complete button
+        completeElementBtn.title = "Complete Element / Lap";
+
+
+        timerIntervalId = setInterval(() => {
+            currentElementSeconds++;
+            elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+        }, 1000);
+         showMessage(`Timer started for task '${currentTask.name}'.`, 'info');
+         // Do NOT collapse task section automatically
+         // collapseSection(taskSetupSection);
+    }
+
+
+    /** Stops the element timer */
+    function stopTimer(showAlert = true) {
+        if (timerIntervalId) {
+            clearInterval(timerIntervalId);
+            timerIntervalId = null;
+            if (showAlert) { showMessage("Timer stopped.", 'info'); }
+        }
+        // Always update control states when timer stops
+        setControlsDisabled(false); // Re-enable controls based on context
+        // Explicitly disable complete button when timer stops
+        completeElementBtn.disabled = true;
+        completeElementBtn.title = "Start timer first";
+    }
+
+    /** Handles Complete Element button click - LOGS and RESTARTS timer */
+    async function handleCompleteElement() {
+        if (!currentTask || !currentTask.name) {
+            showMessage("No active task selected.", 'error');
+            return;
+        }
+        // Allow completion even if timer somehow stopped between clicks,
+        // but only log if duration > 0? Or log 0 duration? Let's log 0.
+        // if (!timerIntervalId) { showMessage("Element timer is not running.", 'error'); return; }
+
+        const elementDurationSeconds = currentElementSeconds; // Capture time
+
+        elementCompletionCounter++;
+        currentTask.totalSeconds += elementDurationSeconds;
+        if (currentSprint) currentSprint.totalSeconds += elementDurationSeconds;
+        if (currentProject) currentProject.totalSeconds += elementDurationSeconds;
+
+        const timestamp = new Date().toISOString();
+        const durationFormatted = formatTimeSimple(elementDurationSeconds);
+
+        const logEntry = {
+            project: currentProject?.name || 'N/A', projectDescription: currentProject?.description || '', projectStarted: currentProject?.started || '',
+            sprint: currentSprint?.name || 'N/A', sprintStarted: currentSprint?.started || '',
+            task: currentTask.name, taskStarted: currentTask.started || '',
+            elementType: 'element', status: 'completed', duration: durationFormatted,
+            elementDurationSeconds: elementDurationSeconds, timestamp: timestamp,
+            elementCountInTask: elementCompletionCounter,
+            taskTotalSeconds: currentTask.totalSeconds,
+            sprintTotalSeconds: currentSprint?.totalSeconds || 0,
+            projectTotalSeconds: currentProject?.totalSeconds || 0
+        };
+
+        elementCounterElement.textContent = elementCompletionCounter;
+        taskTotalTimeElement.textContent = formatTimeDetailed(currentTask.totalSeconds);
+        if (currentSprint) sprintTotalTimeElement.textContent = formatTimeDetailed(currentSprint.totalSeconds);
+        if (currentProject) projectTotalTimeElement.textContent = formatTimeDetailed(currentProject.totalSeconds);
+
+        allLogData.push(logEntry);
+        updateHierarchicalLogDisplay(); // Update log display
+
+        // Reset element timer state BUT keep interval running (or restart if needed)
+        currentElementSeconds = 0;
+        elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+
+        // Ensure controls remain disabled and complete button remains enabled
+        setControlsDisabled(true); // Keep other controls disabled
+        completeElementBtn.disabled = false; // Ensure complete button is enabled
+        completeElementBtn.title = "Complete Element / Lap";
+
+        // Restart interval if it somehow stopped (e.g., error during save?)
+        if (!timerIntervalId) {
+             timerIntervalId = setInterval(() => {
+                currentElementSeconds++;
+                elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+            }, 1000);
+             console.warn("Timer interval restarted unexpectedly in completeElement");
+        }
+
+
+        const saved = await saveLogEntry(logEntry);
+        if (saved) { showMessage(`Element ${elementCompletionCounter} completed. Next timer started.`, 'success'); }
+        else { showMessage(`Element ${elementCompletionCounter} completed locally. Save failed. Next timer started.`, 'error'); }
+    }
+
+
+    /** Handles Download CSV button click */
+    function handleDownloadCSV() {
+        if (timerIntervalId) { showMessage("Timer running. Stop timer first to export.", "warning"); return; }
+        clearMessage();
+        window.location.href = '/log.csv';
+        showMessage('Attempting to download CSV...', 'info');
+    }
+
+    /** Handles Clear Log button click */
+    async function handleClearLog() {
+        if (timerIntervalId) { showMessage("Timer running. Stop timer first to clear log.", "warning"); return; }
+        clearMessage();
+        const confirmation = prompt("This will permanently delete the log on the server. Type 'delete log' to confirm:");
+        if (confirmation && confirmation.toLowerCase() === 'delete log') {
+            try {
+                const response = await fetch('/clear-log', { method: 'POST' });
+                if (!response.ok) {
+                    let errorText = `Server responded with ${response.status}`;
+                    try { errorText = await response.text(); } catch (e) {}
+                    throw new Error(errorText);
+                }
+                const data = await response.json();
+                showMessage(data.message || 'Server log cleared successfully. Reloading data...', 'success');
+                allLogData = [];
+                loadInitialData();
+            } catch (err) {
+                 console.error('Failed to delete log:', err);
+                 showMessage(`Failed to delete log: ${err.message}`, 'error');
+            }
+        } else {
+            showMessage('Log deletion cancelled.', 'info');
+        }
+    }
+
+    // --- Auto Save ---
+    setInterval(() => {
+      if (timerIntervalId && currentTask && currentElementSeconds > 0) {
+        const autoSaveEntry = {
+          project: currentProject?.name || 'N/A', sprint: currentSprint?.name || 'N/A', task: currentTask.name,
+          elementType: 'element_autosave', status: 'autosave',
+          currentElementSeconds: currentElementSeconds,
+          timestamp: new Date().toISOString(),
+          projectDescription: currentProject?.description, projectStarted: currentProject?.started,
+          sprintStarted: currentSprint?.started, taskStarted: currentTask.started,
+          elementCountInTask: elementCompletionCounter, taskTotalSeconds: currentTask.totalSeconds,
+          sprintTotalSeconds: currentSprint?.totalSeconds || 0, projectTotalSeconds: currentProject?.totalSeconds || 0
+        };
+        saveLogEntry(autoSaveEntry).then(saved => {
+            if (saved) console.log('Auto-saved element state.');
+            else console.warn('Auto-save failed.');
+        });
+      }
+    }, 60000);
+
+
+    // --- Initialization ---
+    /** Fetches initial log data and sets up the UI */
+    function loadInitialData() {
+        clearMessage();
+        fetch('/load-log')
+            .then(res => {
+                if (!res.ok) { throw new Error(`Failed to load log: ${res.status}`); }
+                return res.json();
+            })
+            .then(data => {
+                allLogData = Array.isArray(data) ? data : [];
+                if (!Array.isArray(data)) { console.warn("Log data loaded was not an array."); }
+
+                const projects = allLogData.map(entry => entry ? entry.project : null).filter(p => p);
+                populateSelect(projectSelect, projects, '-- Select Project --');
+                 resetSprintUI(); // Resets sprint and task sections to initial disabled state
+                 projectDescInput.value = ''; projectStartSpan.textContent = '-'; projectTotalTimeElement.textContent = formatTimeDetailed(0);
+                 selectedProjectNameSpan.textContent = ''; // Clear selected names
+                 selectedSprintNameSpan.textContent = '';
+                 selectedTaskNameSpan.textContent = '';
+                 elementTimerElement.textContent = '0:00';
+                 elementCounterElement.textContent = '0';
+                 // Ensure complete button is initially disabled
+                 completeElementBtn.disabled = true;
+                 completeElementBtn.title = "Start timer first";
+                 startProjectBtn.disabled = false; // Ensure project button is enabled initially
+                 startProjectBtn.title = "Create new project or load project name from input field";
+
+                 // Set initial collapse state (only project expanded)
+                 expandSection(projectSetupSection);
+                 collapseSection(sprintSetupSection);
+                 collapseSection(taskSetupSection);
+                 collapseSection(logSection); // Start with log collapsed
+
+                 updateHierarchicalLogDisplay(); // Update log display on initial load
+
+
+                 console.log("Log data loaded and UI initialized.");
+            })
+            .catch(error => {
+                console.error("Error loading initial data:", error);
+                showMessage(`Could not load log data from the server: ${error.message}`, 'error');
+            });
+    }
+
+    // --- Before Unload Warning ---
+    window.addEventListener('beforeunload', (event) => {
+        if (timerIntervalId) {
+            event.preventDefault();
+            event.returnValue = '';
+            return 'Timer is running. Are you sure you want to leave?';
+        }
+    });
+
+
+    // --- Event Listener Setup ---
+    projectSelect.addEventListener('change', handleProjectChange);
+    sprintSelect.addEventListener('change', handleSprintChange);
+    taskSelect.addEventListener('change', handleTaskChange);
+
+    startProjectBtn.addEventListener('click', handleStartProject);
+    startSprintBtn.addEventListener('click', handleStartSprint);
+    startTaskBtn.addEventListener('click', handleStartTask);
+    completeElementBtn.addEventListener('click', handleCompleteElement);
+    clearLogBtn.addEventListener('click', handleClearLog);
+    downloadCSVBtn.addEventListener('click', handleDownloadCSV);
+
+    // Add listeners for sidebar collapse toggles
+    projectHeader.addEventListener('click', () => toggleSection(projectSetupSection));
+    sprintHeader.addEventListener('click', () => toggleSection(sprintSetupSection));
+    taskHeader.addEventListener('click', () => toggleSection(taskSetupSection));
+
+    // Add listener for hierarchical log toggles (using event delegation)
+    elementLogElement.addEventListener('click', (event) => {
+        const header = event.target.closest('.log-header');
+        if (header) {
+            const parentItem = header.closest('.log-item');
+            if (parentItem) {
+                parentItem.classList.toggle('collapsed');
+            }
+        }
+    });
+
+    // Add listeners for log expand/collapse all buttons
+    expandAllLogBtn.addEventListener('click', () => {
+        elementLogElement.querySelectorAll('.log-item').forEach(item => item.classList.remove('collapsed'));
+    });
+    collapseAllLogBtn.addEventListener('click', () => {
+         elementLogElement.querySelectorAll('.log-item').forEach(item => item.classList.add('collapsed'));
+    });
+
+    // Add listener for main log section toggle
+    logHeader.addEventListener('click', () => toggleSection(logSection));
+
+
+    // Initial load
+    window.onload = loadInitialData;
+
+  </script>
+</body>
+</html>
