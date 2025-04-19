@@ -7,31 +7,76 @@
   <style>
     /* --- Base Styles --- */
     :root {
-        /* Color Scheme based on Mindful Palettes No. 164 */
-        --bg-dark-base: #003447; /* Dark Blue from Grad 4 */
-        --bg-medium-base: #49747F; /* Muted Teal/Blue-Gray from Grad 2/4 */
-        --bg-light-base: #6b919d; /* Lighter shade derived from medium */
-        --text-light: #F4EFEE; /* Light Off-White from Grad 1 */
-        --text-medium: #CDBBB9; /* Muted Beige/Gray from Grad 1/2/3 */
-        --accent-primary: #E34B26; /* Burnt Orange/Red from Grad 3/5 */
-        --accent-secondary: #F4EFEE; /* Light Off-White for secondary highlights */
-        --accent-success: #28a745; /* Keeping distinct green */
-        --accent-danger: #dc3545; /* Keeping distinct red */
-        --accent-info: #49747F; /* Using the medium bg color for info */
-        --border-color: #6b919d; /* Use light bg for borders */
-        --shadow-color: rgba(0,0,0,0.6); /* Darker shadow for contrast */
+        /* Default: Dark Theme */
+        --bg-dark-base: #003447;
+        --bg-medium-base: #49747F;
+        --bg-light-base: #6b919d;
+        --text-light: #F4EFEE;
+        --text-medium: #CDBBB9;
+        --accent-primary: #171b3a;
+        --accent-secondary: #F4EFEE;
+        --accent-success: #28a745;
+        --accent-danger: #dc3545;
+        --accent-info: #294a52;
+        /* --border-color: #6b919d; */ /* Commented out */
+        --shadow-color: rgb(113 162 174 / 90%);
         --font-main: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
         --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
-        /* Specific Timer/Counter Colors */
-        --timer-bg: #003447; /* User requested */
-        --counter-bg: #441111; /* User requested */
-        /* Sidebar Background with Opacity */
-        --sidebar-bg: rgba(73, 116, 127, 0.9); /* Derived from --bg-medium-base with 90% alpha */
-        /* Scrollbar colors */
+        --timer-bg: #003447;
+        /* --counter-bg: #441111; /* Background removed */
+        --sidebar-bg: rgba(73, 116, 127, 0.9);
         --scrollbar-bg: var(--bg-dark-base);
         --scrollbar-thumb: var(--bg-light-base);
         --scrollbar-thumb-hover: var(--text-medium);
+        --stop-btn-bg: #6c757d;
+        --pause-play-btn-bg: var(--accent-info);
+        --log-item-bg: var(--bg-light);
+        --log-header-bg: rgba(0, 0, 0, 0.1);
+        --log-header-hover-bg: rgba(0, 0, 0, 0.2);
+        --log-element-bg: var(--bg-dark-base);
+        --input-bg: var(--bg-dark-base);
+        --input-focus-shadow: rgba(23, 27, 58, 0.3);
+        --button-hover-bg: #0d1025;
+        --button-info-hover-bg: #138496;
+        --stop-btn-hover-bg: #5a6268;
+        --pause-play-btn-hover-bg: #1f383e;
+        --ticker-bg: rgba(0,0,0,0.5);
+        --ticker-color: white;
+        --instructions-sidebar-width: 300px; /* Define width for reuse */
     }
+
+    /* Light Theme Variables */
+    body.light-theme {
+        --bg-dark-base: #F8F9FA; /* Very light gray */
+        --bg-medium-base: #FFFFFF; /* White */
+        --bg-light-base: #E9ECEF; /* Light gray */
+        --text-light: #212529; /* Dark gray/black */
+        --text-medium: #6C757D; /* Medium gray */
+        --accent-primary: #171b3a; /* Keep dark blue */
+        --accent-secondary: #003447; /* Use dark blue */
+        /* --border-color: #DEE2E6; */ /* Light border color */
+        --shadow-color: rgba(0, 0, 0, 0.15); /* Lighter shadow */
+        --timer-bg: #E9ECEF; /* Light gray */
+        --sidebar-bg: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+        --scrollbar-bg: var(--bg-light-base);
+        --scrollbar-thumb: var(--text-medium);
+        --scrollbar-thumb-hover: var(--text-light);
+        --stop-btn-bg: #adb5bd; /* Lighter gray */
+        --pause-play-btn-bg: #5bc0de; /* Light info blue */
+        --log-item-bg: #f8f9fa;
+        --log-header-bg: rgba(0, 0, 0, 0.03);
+        --log-header-hover-bg: rgba(0, 0, 0, 0.06);
+        --log-element-bg: #FFFFFF;
+        --input-bg: #FFFFFF;
+        --input-focus-shadow: rgba(23, 27, 58, 0.2);
+        --button-hover-bg: #0d1025; /* Keep dark blue hover */
+        --button-info-hover-bg: #138496; /* Keep dark teal hover */
+        --stop-btn-hover-bg: #9fa6ac;
+        --pause-play-btn-hover-bg: #4ab3ce;
+        --ticker-bg: rgba(233, 236, 239, 0.8); /* Light ticker background */
+        --ticker-color: #212529; /* Dark text */
+    }
+
 
     *, *::before, *::after {
         box-sizing: border-box;
@@ -40,20 +85,84 @@
     body {
       margin: 0; padding: 0; font-family: var(--font-main); background-color: var(--bg-dark-base);
       color: var(--text-light); line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh;
+      transition: background-color 0.3s ease, color 0.3s ease; /* Theme transition */
+      position: relative; /* Needed for fixed sidebar positioning context */
+      overflow-x: hidden; /* Prevent horizontal scrollbar from fixed sidebar */
     }
+    /* Hide elements in fullscreen mode */
+    body.fullscreen-active > h1,
+    body.fullscreen-active > #themeToggleBtn,
+    body.fullscreen-active .sidebar, /* Use class selector, no direct child */
+    body.fullscreen-active #instructionsSidebar,
+    body.fullscreen-active #toggleInstructionsBtn, /* Use ID selector */
+    body.fullscreen-active .log-section, /* Use class selector */
+    body.fullscreen-active .ticker-input-container, /* Use class selector */
+    body.fullscreen-active #changeTickerLink /* Use ID selector */
+     {
+        display: none !important; /* Added !important for robustness */
+    }
+
 
     h1 { text-align: center; color: var(--text-light); margin: 20px 0; flex-shrink: 0; font-weight: 300; }
     h3 {
-        text-align: left; color: var(--accent-primary); margin: 0 0 1em 0; border-bottom: 1px solid var(--border-color);
+        text-align: left; color: var(--accent-primary); margin: 0 0 1em 0; border-bottom: 1px solid var(--border-color, #6b919d); /* Added fallback */
         padding-bottom: 0.6em; font-size: 1.1em; font-weight: 600;
     }
-    .sidebar h3, .instructions-sidebar h3, .log-section > h3 { cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .sidebar h3 .section-title, .log-section > h3 .section-title { flex-grow: 1; }
-    .sidebar h3 .selected-item-name { font-size: 0.85em; font-weight: 400; color: var(--text-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; margin-left: 5px; }
-    .sidebar .collapsed > h3 .selected-item-name { display: inline; }
-    .sidebar h3::after, .log-section > h3::after { content: '▲'; font-size: 0.7em; margin-left: 10px; transition: transform 0.3s ease; flex-shrink: 0; color: var(--text-medium); }
-    .sidebar .collapsed > h3::after, .log-section.collapsed > h3::after { transform: rotate(180deg); }
-    .instructions-sidebar h3 { cursor: default; justify-content: center; text-align: center; }
+    /* Updated H3 styles for sections */
+    .section-header { /* New class for header container */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1em; /* Keep bottom margin */
+        border-bottom: 1px solid var(--border-color, #6b919d); /* Added fallback */
+        padding-bottom: 0.6em; /* Keep padding */
+        cursor: default; /* No cursor on header div itself */
+    }
+    .section-header h3 { /* Style actual h3 text */
+         margin: 0;
+         padding: 0;
+         border: none;
+         flex-grow: 1; /* Allow title to grow */
+         cursor: default; /* No cursor on text */
+         color: var(--accent-primary);
+         font-size: 1.1em;
+         font-weight: 600;
+         pointer-events: none; /* Prevent h3 from capturing click meant for header */
+    }
+     .section-header .section-title { flex-grow: 1; }
+     .section-header .selected-item-name { font-size: 0.85em; font-weight: 400; color: var(--text-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; margin-left: 5px; pointer-events: none; }
+     .collapsed > .section-header .selected-item-name { display: inline; }
+
+    /* Toggle Button Styles */
+    .toggle-section-btn {
+        background: none;
+        border: 1px solid var(--text-medium);
+        color: var(--text-medium);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 16px; /* Control icon size */
+        line-height: 20px; /* Center icon vertically */
+        text-align: center;
+        padding: 0;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.3s ease;
+    }
+    .toggle-section-btn:hover {
+        background-color: var(--bg-light);
+        border-color: var(--text-light);
+        color: var(--text-light);
+    }
+    .toggle-section-btn::before {
+        content: '−'; /* Expanded state */
+    }
+    .collapsed > .section-header .toggle-section-btn::before, /* Sidebar/Log Section */
+    .log-item.collapsed > .log-header .toggle-section-btn::before /* Log Items */ {
+        content: '+'; /* Collapsed state */
+    }
+
 
     /* --- Scrollbar Styles --- */
     ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -62,160 +171,248 @@
     ::-webkit-scrollbar-thumb:hover { background-color: var(--scrollbar-thumb-hover); }
     * { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg); }
 
-    /* --- Main Layout (3 Columns) --- */
-    .app-container { display: grid; grid-template-columns: 320px 1fr 280px; flex-grow: 1; width: 100%; max-width: 1800px; margin: 0 auto; gap: 25px; padding: 0 25px 25px 25px; }
+    /* --- Main Layout (2 Columns + Fixed Sidebar) --- */
+    .app-container {
+        display: grid;
+        grid-template-columns: 300px 1fr; /* Left | Main */
+        flex-grow: 1; width: 100%; max-width: 1800px; margin: 0 auto; gap: 25px; padding: 0 25px 25px 25px;
+     }
+     body.fullscreen-active > .app-container {
+         display: block; /* Change layout for fullscreen */
+         padding: 0;
+         margin: 0;
+         max-width: none;
+     }
 
     /* --- Sidebars Common --- */
-    .sidebar, .instructions-sidebar { background-color: var(--sidebar-bg); padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px var(--shadow-color); overflow-y: scroll; height: fit-content; max-height: calc(100vh - 110px); border: 1px solid var(--border-color); backdrop-filter: blur(2px); }
-    .sidebar { flex-basis: 320px; }
-    .instructions-sidebar { flex-basis: 280px; }
+    .sidebar { /* Left Sidebar */
+        background-color: var(--sidebar-bg); padding: 15px 25px; border-radius: 10px;
+        box-shadow: 0 5px 20px var(--shadow-color); overflow-y: scroll; height: fit-content;
+        max-height: calc(100vh - 110px); border: 1px solid var(--border-color, #6b919d); /* Added fallback */ backdrop-filter: blur(2px);
+        transition: background-color 0.3s ease; /* Theme transition */
+     }
+
+    /* Instructions Sidebar (Right, Collapsible) */
+    .instructions-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: var(--instructions-sidebar-width);
+        height: 100vh; /* Full height */
+        background-color: var(--sidebar-bg);
+        padding: 60px 25px 25px 25px; /* Add top padding for toggle button */
+        border-radius: 0; /* No radius when fixed */
+        box-shadow: -5px 0 15px var(--shadow-color);
+        overflow-y: auto;
+        border: none;
+        border-left: 1px solid var(--border-color, #6b919d); /* Border on left */
+        backdrop-filter: blur(2px);
+        transform: translateX(100%); /* Start hidden */
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        z-index: 900; /* Below fullscreen timer */
+    }
+    .instructions-sidebar.expanded {
+        transform: translateX(0);
+    }
+    /* Instructions Toggle Button */
+    #toggleInstructionsBtn {
+        position: fixed;
+        top: 50%; /* Center vertically */
+        right: 0;
+        transform: translateY(-50%) translateX(0); /* Adjust vertical centering */
+        z-index: 901; /* Above sidebar */
+        background-color: var(--sidebar-bg);
+        color: var(--text-light);
+        border: 1px solid var(--border-color, #6b919d);
+        border-right: none;
+        padding: 15px 5px 15px 8px; /* Adjust padding */
+        cursor: pointer;
+        border-radius: 8px 0 0 8px; /* Rounded left corners */
+        font-size: 1.0em; /* Adjusted font size */
+        line-height: 1;
+        transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        display: flex; /* Use flex for icon and text */
+        align-items: center;
+        gap: 8px;
+    }
+    #toggleInstructionsBtn .tab-text {
+        writing-mode: vertical-rl; /* Vertical text */
+        text-orientation: mixed;
+        white-space: nowrap;
+        font-size: 0.8em; /* Smaller text */
+    }
+    #toggleInstructionsBtn .tab-arrow {
+        display: inline-block;
+        width: 1em; /* Ensure space for arrow */
+    }
+    .instructions-sidebar.expanded + #toggleInstructionsBtn {
+         transform: translateY(-50%) translateX(calc(-1 * var(--instructions-sidebar-width))); /* Move left with sidebar */
+    }
+
 
     /* --- Left Sidebar Specific --- */
-    .setup-section { margin-bottom: 20px; padding: 15px 0; border-bottom: 1px solid var(--border-color); box-shadow: none; background: none; width: 100%; max-width: none; }
+    .setup-section { margin-bottom: 20px; padding: 0; border-bottom: 1px solid var(--border-color, #6b919d); /* Added fallback */ box-shadow: none; background: none; width: 100%; max-width: none; }
     .setup-section:last-child { border-bottom: none; margin-bottom: 0; }
 
     /* --- Main Content --- */
-    .main-content { display: flex; flex-direction: column; gap: 25px; min-width: 0; align-items: stretch; }
+    .main-content { display: flex; flex-direction: column; gap: 25px; min-width: 0; align-items: center; /* Center children */ }
+     body.fullscreen-active > .app-container > .main-content {
+        padding: 0; margin: 0; gap: 0;
+     }
 
     /* --- Collapsible Content --- */
     .collapsible-content { overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out, margin 0.4s ease-out; max-height: 600px; padding-top: 15px; }
-    .collapsed > .collapsible-content { max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: -15px; border-top: none; }
+    .collapsed > .collapsible-content { max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; border-top: none; } /* Adjusted margin */
 
     /* --- Form Elements (Left Sidebar) --- */
     .sidebar .input-group { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin-bottom: 15px; }
     .sidebar .input-group label { margin-bottom: 3px; font-size: 0.9em; color: var(--text-medium); }
-    .sidebar .input-group input[type="text"], .sidebar .input-group select { min-width: 0; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 4px; border: 1px solid var(--border-color); background-color: var(--bg-dark-base); color: var(--text-light); font-size: 0.95em; }
-    .sidebar .input-group input:focus, .sidebar .input-group select:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 2px rgba(227, 75, 38, 0.3); }
+    .sidebar .input-group input[type="text"], .sidebar .input-group select { min-width: 0; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 4px; border: 1px solid var(--border-color, #6b919d); /* Added fallback */ background-color: var(--input-bg); color: var(--text-light); font-size: 0.95em; transition: background-color 0.3s ease, color 0.3s ease; }
+    .sidebar .input-group input:focus, .sidebar .input-group select:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 2px var(--input-focus-shadow); }
     .sidebar .input-group button { margin-left: 0; width: 100%; margin-top: 8px; padding: 10px 15px; border-radius: 4px; border: none; font-size: 0.95em; background-color: var(--accent-primary); color: white; cursor: pointer; transition: background-color 0.2s ease; font-weight: 600; }
-    .sidebar .input-group button:hover:not(:disabled) { background-color: #c74020; }
-    button:disabled { background-color: #555; cursor: not-allowed; opacity: 0.7; }
+    .sidebar .input-group button:hover:not(:disabled) { background-color: var(--button-hover-bg); }
+    button:disabled { background-color: #555 !important; cursor: not-allowed !important; opacity: 0.7 !important; } /* Ensure disabled style overrides theme */
     input:disabled, select:disabled { background-color: #444 !important; cursor: not-allowed !important; opacity: 0.6 !important; }
 
     /* --- Display Info (Left Sidebar) --- */
-    .sidebar .display-item { margin-bottom: 8px; font-size: 0.9em; }
+    .sidebar .display-item { margin: 8px 0 15px 0; font-size: 0.9em; }
     .sidebar .display-item .label { color: var(--text-medium); }
     .sidebar .display-item .value { font-weight: 600; color: var(--text-light); margin-left: 8px; }
 
-    /* --- Timer/Counter Container Emphasis (NEW Stacked LAYOUT) --- */
-    .timer-container {
-        display: flex;
-        flex-direction: column; /* Stack counter, timer, button */
-        align-items: center; /* Center items horizontally */
-        gap: 20px; /* Gap between items */
-        padding: 25px;
-        background-color: var(--bg-medium);
-        border-radius: 10px;
-        box-shadow: 0 5px 20px var(--shadow-color);
+    /* --- Timer/Counter Container Emphasis (Stacked LAYOUT) --- */
+    .timer-container { display: flex; flex-direction: column; align-items: center; gap: 15px; /* Reduced gap */ padding: 25px; background-color: var(--bg-medium); border-radius: 10px; box-shadow: 0 5px 20px var(--shadow-color); width: 100%; margin: 0; border: 1px solid var(--border-color, #6b919d); /* Added fallback */ flex-shrink: 0; position: relative; /* Needed for fullscreen button positioning */ transition: background-color 0.3s ease; }
+    /* Fullscreen styles for timer container */
+    body.fullscreen-active .timer-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; border-radius: 0; border: none; padding: 5vh 5vw; /* Reset padding */ justify-content: center; /* Center content vertically */ gap: 30px; /* Adjust gap for fullscreen */ cursor: pointer; /* Indicate background is clickable to exit */ }
+    body.fullscreen-active .timer-container > *:not(#fullscreenTicker) { cursor: default; /* Reset cursor for children, except ticker */ }
+
+    .counter-display-area { width: auto; min-width: 120px; /* background-color: var(--counter-bg); */ color: var(--text-light); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 8px 15px; margin-bottom: 0; /* Reduced margin */ }
+    #elementCounter { font-size: 2.5em; font-weight: bold; line-height: 1.1; }
+    .counter-display-area .box-label { font-size: 0.8em; font-weight: normal; color: var(--text-medium); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .timer-display-area { width: 100%; max-width: 700px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: var(--timer-bg); color: var(--text-light); font-family: var(--font-mono); padding: 30px 20px; border-radius: 10px; min-height: 150px; /* border: 1px solid var(--border-color); */ transition: background-color 0.3s ease, color 0.3s ease; }
+    #elementTimer { font-size: clamp(3rem, 12vw, 8rem); line-height: 1.1; font-weight: bold; }
+    .timer-display-area .box-label { font-size: clamp(0.8rem, 2vw, 1.1rem); font-weight: normal; color: var(--text-medium); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Timer Controls Container */
+    .timer-controls { display: flex; justify-content: center; align-items: center; gap: 20px; /* Gap between buttons */ margin-top: 15px; width: 100%; max-width: 400px; /* Limit width of control group */ }
+
+    /* Individual Control Buttons */
+    .control-btn { /* Base style for Pause/Stop */ padding: 10px 15px; border-radius: 50%; /* Make round */ width: 60px; /* Size */ height: 60px; border: none; color: white; font-size: 0.9em; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease, opacity 0.2s ease; display: flex; justify-content: center; align-items: center; text-align: center; line-height: 1.2; }
+    .pause-play-btn { background-color: var(--pause-play-btn-bg); }
+    .pause-play-btn:hover:not(:disabled) { background-color: var(--pause-play-btn-hover-bg); }
+    .stop-btn { background-color: var(--stop-btn-bg); }
+    .stop-btn:hover:not(:disabled) { background-color: var(--stop-btn-hover-bg); }
+
+    .lap-button { /* Keep Lap button distinct */ width: 75px; height: 75px; background-color: var(--accent-danger); color: white; border: none; border-radius: 50%; font-size: 1.2em; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; transition: background-color 0.2s ease; padding: 5px; text-align: center; line-height: 1.2; /* Removed margin-top */ }
+    .lap-button:hover:not(:disabled) { background-color: #c82333; }
+
+    /* Ticker Input Area - Positioned outside timer container */
+    .ticker-input-container {
         width: 100%;
-        margin: 0;
-        border: 1px solid var(--border-color);
-        flex-shrink: 0;
-    }
-
-    /* Counter Display Area (Top Rectangle) */
-    .counter-display-area {
-        width: auto; /* Auto width */
-        min-width: 120px; /* Min width */
-        color: var(--text-light);
-        /* border: 1px solid var(--border-color); */ /* Removed border */
-        border-radius: 6px; /* Standard radius */
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+        max-width: 700px; /* Match timer display width */
+        margin: 15px auto 0 auto; /* Center below timer */
+        display: flex; /* Default state */
+        gap: 10px;
+        height: 38px; /* Set fixed height */
         align-items: center;
-        text-align: center;
-        padding: 8px 15px; /* Adjust padding */
-        margin-bottom: 15px; /* Space below counter */
     }
-    #elementCounter {
-        font-size: 2.5em; /* Larger counter number */
-        font-weight: bold;
-        line-height: 1.1;
-    }
-    .counter-display-area .box-label {
-        font-size: 0.8em; /* Larger label */
-        font-weight: normal;
-        color: var(--text-medium);
-        margin-top: 2px; /* Adjust space */
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Timer Display Area (Center) */
-    .timer-display-area {
-        width: 100%; /* Full width */
-        max-width: 700px; /* Max width */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--timer-bg); /* User requested color */
+    #tickerInput {
+        flex-grow: 1;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color, #6b919d);
+        background-color: var(--input-bg);
         color: var(--text-light);
-        font-family: var(--font-mono);
-        padding: 30px 20px; /* More padding */
-        border-radius: 10px;
-        min-height: 150px; /* Adjust height */
+        font-size: 0.9em;
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
-    #elementTimer {
-        font-size: clamp(3rem, 12vw, 8rem); /* Large responsive font */
-        line-height: 1.1;
-        font-weight: bold;
-    }
-    .timer-display-area .box-label {
-        font-size: clamp(0.8rem, 2vw, 1.1rem);
-        font-weight: normal;
-        color: var(--text-medium);
-        margin-bottom: 10px; /* More space below label */
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Lap Button (Bottom Circle) */
-    .lap-button {
-        width: 150px; /* Adjust size */
-        height: 150px;
-        background-color: var(--accent-danger);
-        color: white;
+    #tickerInput::placeholder { color: var(--text-medium); opacity: 0.7; }
+    #setTickerBtn {
+        padding: 8px 15px;
+        border-radius: 4px;
         border: none;
-        border-radius: 50%;
-        font-size: 1.2em; /* Adjust text size */
+        background-color: var(--accent-primary);
+        color: white;
+        font-size: 0.9em;
         font-weight: 600;
         cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
         transition: background-color 0.2s ease;
-        padding: 5px;
-        text-align: center;
-        line-height: 1.2;
-        margin-top: 15px; /* Space above button */
     }
-    .lap-button:hover:not(:disabled) { background-color: #c82333; }
-    .lap-button:disabled { background-color: #555; cursor: not-allowed; opacity: 0.7; }
+     #setTickerBtn:hover { background-color: var(--button-hover-bg); }
+     /* Link to change ticker */
+     #changeTickerLink {
+         color: var(--text-medium);
+         text-decoration: underline;
+         font-size: 0.9em;
+         cursor: pointer;
+         display: none; /* Hidden by default */
+         text-align: center;
+         width: 100%;
+         max-width: 700px;
+         margin: 15px auto 0 auto; /* Center below timer */
+         height: 38px; /* Match input container height */
+         line-height: 38px; /* Center vertically */
+     }
+     #changeTickerLink:hover { color: var(--text-light); }
+
+
+    /* Fullscreen Ticker Display */
+    @keyframes tickerScroll {
+        0% { transform: translateX(0%); } /* Start fully visible */
+        100% { transform: translateX(-100%); } /* Scroll fully off screen */
+    }
+    .fullscreen-ticker {
+        position: absolute;
+        top: 40px; /* Move down from top */
+        left: 0;
+        width: 100%;
+        background: var(--ticker-bg);
+        color: var(--ticker-color);
+        white-space: nowrap;
+        overflow: hidden;
+        display: none; /* Hidden by default */
+        padding: 10px 0; /* Increased padding */
+        font-size: 1.6em; /* Increased font size */
+        z-index: 1002; /* Above timer container background */
+        line-height: 1.4; /* Adjusted line height */
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    body.fullscreen-active .fullscreen-ticker {
+        display: block; /* Show only in fullscreen */
+    }
+    .fullscreen-ticker span {
+        display: inline-block;
+        padding-left: 100%; /* Start off screen */
+        animation: tickerScroll 240s linear infinite; /* Slower speed */
+    }
+
+
+    /* Fullscreen Button */
+    .fullscreen-toggle-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); color: var(--text-light); border: 1px solid var(--text-medium); border-radius: 5px; padding: 5px 8px; cursor: pointer; font-size: 1.1em; line-height: 1; opacity: 0.7; transition: opacity 0.2s; z-index: 1001; /* Above timer container background */ }
+    .fullscreen-toggle-btn:hover { opacity: 1; }
+    body.fullscreen-active .fullscreen-toggle-btn::before { content: "Exit"; font-size: 0.8em; } /* Change text in fullscreen */
+    body:not(.fullscreen-active) .fullscreen-toggle-btn::before { content: "⛶"; } /* Unicode fullscreen symbol */
 
 
     /* --- Log Section --- */
-    .log-section { background-color: var(--bg-medium); padding: 25px; border-radius: 10px; box-shadow: 0 5px 20px var(--shadow-color); width: 100%; max-width: none; margin: 0; flex-grow: 1; display: flex; flex-direction: column; border: 1px solid var(--border-color); min-height: 150px; overflow: hidden; transition: flex-grow 0.4s ease, min-height 0.4s ease; }
+    .log-section { background-color: var(--sidebar-bg); backdrop-filter: blur(2px); padding: 25px; border-radius: 10px; box-shadow: 0 5px 20px var(--shadow-color); width: 100%; max-width: 700px; /* Match timer width */ margin: 0 auto; /* Center */ flex-grow: 1; display: flex; flex-direction: column; border: 1px solid var(--border-color, #6b919d); /* Added fallback */ min-height: 150px; overflow: hidden; transition: flex-grow 0.4s ease, min-height 0.4s ease, background-color 0.3s ease; }
     .log-section.collapsed { min-height: 60px; flex-grow: 0; }
-    .log-section > h3 { margin-bottom: 10px; text-align: left; flex-shrink: 0; color: var(--text-light); }
+    .log-section > .section-header { margin-bottom: 10px; border-bottom-color: var(--border-color, #6b919d); /* Added fallback */ }
     .log-controls { margin-bottom: 10px; flex-shrink: 0; display: flex; gap: 10px; }
-    .log-controls button { padding: 4px 8px; font-size: 0.8em; background-color: var(--bg-light); color: var(--text-medium); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; }
-    .log-controls button:hover { background-color: var(--border-color); color: var(--text-light); }
+    .log-controls button { padding: 4px 8px; font-size: 0.8em; background-color: var(--bg-light); color: var(--text-medium); border: 1px solid var(--border-color, #6b919d); /* Added fallback */ border-radius: 4px; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease; }
+    .log-controls button:hover { background-color: var(--border-color, #6b919d); color: var(--text-light); }
     #elementLog { list-style: none; padding: 0 10px 0 0; margin: 0; flex-grow: 1; overflow-y: scroll; background-color: transparent; border-radius: 0; border: none; max-height: 500px; }
     .log-section.collapsed > #elementLog, .log-section.collapsed > .log-controls, .log-section.collapsed > .utility-buttons-container { display: none; }
-    .log-item { margin-bottom: 8px; border-radius: 4px; background-color: var(--bg-light); }
+    .log-item { margin-bottom: 8px; border-radius: 4px; background-color: var(--log-item-bg); transition: background-color 0.3s ease; }
     .log-sprint { border-left: 4px solid var(--accent-primary); }
     .log-task { margin-left: 15px; border-left: 4px solid var(--accent-info); }
-    .log-header { padding: 10px 15px; cursor: pointer; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background-color: rgba(0, 0, 0, 0.1); border-bottom: 1px solid var(--border-color); border-radius: 4px 4px 0 0; gap: 10px; }
-    .log-header:hover { background-color: rgba(0, 0, 0, 0.2); }
-    .log-header .title { font-weight: 600; font-size: 1em; flex-shrink: 0; color: var(--text-light); }
-    .log-header .details { font-size: 0.8em; color: var(--text-medium); text-align: right; flex-grow: 1; }
-    .log-header .toggle-icon { margin-left: 10px; transition: transform 0.3s ease; display: inline-block; font-size: 0.8em; flex-shrink: 0; color: var(--text-medium); }
-    .log-item.collapsed > .log-header .toggle-icon { transform: rotate(-90deg); }
-    .log-content { padding: 10px 5px 10px 20px; max-height: 1000px; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; border-top: 1px solid var(--border-color); }
+    .log-header { padding: 10px 15px; cursor: default; /* Remove cursor */ display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background-color: var(--log-header-bg); border-bottom: 1px solid var(--border-color, #6b919d); /* Added fallback */ border-radius: 4px 4px 0 0; gap: 10px; transition: background-color 0.3s ease; }
+    .log-header:hover { background-color: var(--log-header-hover-bg); }
+    .log-header .title { font-weight: 600; font-size: 1em; flex-shrink: 0; color: var(--text-light); pointer-events: none; /* Prevent text click */ }
+    .log-header .details { font-size: 0.8em; color: var(--text-medium); text-align: right; flex-grow: 1; pointer-events: none; }
+    .log-header .toggle-section-btn { /* Style toggle button within log header */ width: 20px; height: 20px; font-size: 14px; line-height: 16px; border-color: var(--text-medium); /* Use fallback if needed */ }
+    .log-content { padding: 10px 5px 10px 20px; max-height: 1000px; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; border-top: 1px solid var(--border-color, #6b919d); /* Added fallback */ }
     .log-item.collapsed > .log-content { max-height: 0; padding-top: 0; padding-bottom: 0; border-top: none; }
-    .log-element-item { padding: 8px 12px; margin-left: 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-left: 4px solid var(--accent-secondary); background-color: var(--bg-dark-base); }
+    .log-element-item { padding: 8px 12px; margin-left: 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-left: 4px solid var(--accent-secondary); background-color: var(--log-element-bg); transition: background-color 0.3s ease; }
     .log-element-item .log-text { flex-grow: 1; word-wrap: break-word; font-size: 0.9em; }
     .log-element-item .log-text .duration { font-weight: 600; color: var(--accent-secondary); margin-left: 5px;}
     .log-element-item .log-timestamp { font-size: 0.8em; color: var(--text-medium); white-space: nowrap; }
@@ -226,54 +423,52 @@
     .button-danger { background-color: var(--accent-danger); color: white; }
     .button-danger:hover:not(:disabled) { background-color: #c82333; }
     .button-info { background-color: var(--accent-info); color: white; }
-    .button-info:hover:not(:disabled) { background-color: #138496; }
+    .button-info:hover:not(:disabled) { background-color: var(--button-info-hover-bg); }
 
      /* --- Message Area --- */
-    #messageArea { padding: 12px; margin: 0 auto 20px auto; width: 90%; max-width: 1000px; border-radius: 6px; text-align: center; font-weight: bold; display: none; box-sizing: border-box; flex-shrink: 0; font-size: 0.95em; }
+    #messageArea { padding: 12px; margin: 0 auto 20px auto; width: 90%; max-width: 1000px; border-radius: 6px; text-align: center; font-weight: bold; display: none; box-sizing: border-box; flex-shrink: 0; font-size: 0.95em; transition: background-color 0.3s ease, color 0.3s ease; }
     #messageArea.error { background-color: var(--accent-danger); color: white; display: block; }
     #messageArea.success { background-color: var(--accent-success); color: white; display: block; }
     #messageArea.info { background-color: var(--accent-info); color: white; display: block; }
     #messageArea.warning { background-color: #ffc107; color: black; display: block; }
 
     /* --- Instructions Sidebar --- */
-    .instructions-sidebar h4 { color: var(--accent-secondary); margin-top: 1.5em; margin-bottom: 0.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+    .instructions-sidebar h4 { color: var(--accent-secondary); margin-top: 1.5em; margin-bottom: 0.5em; border-bottom: 1px solid var(--border-color, #6b919d); /* Added fallback */ padding-bottom: 0.3em; }
     .instructions-sidebar p, .instructions-sidebar ul { font-size: 0.85em; color: var(--text-medium); margin-bottom: 1em; }
     .instructions-sidebar ul { padding-left: 20px; }
     .instructions-sidebar li { margin-bottom: 0.5em; }
-    .instructions-sidebar code { background-color: var(--bg-light); padding: 0.2em 0.4em; border-radius: 3px; font-family: var(--font-mono); font-size: 0.9em; color: var(--accent-primary); }
+    .instructions-sidebar code { background-color: var(--bg-light); padding: 0.2em 0.4em; border-radius: 3px; font-family: var(--font-mono); font-size: 0.9em; color: var(--accent-primary); transition: background-color 0.3s ease, color 0.3s ease; }
+
+    /* Theme Toggle Button */
+    #themeToggleBtn {
+        position: fixed;
+        top: 15px;
+        right: 15px; /* Position near top-right */
+        z-index: 1050; /* Above most elements */
+        padding: 8px 10px;
+        border-radius: 5px;
+        border: 1px solid var(--text-medium);
+        background-color: var(--sidebar-bg); /* Match sidebar */
+        color: var(--text-light);
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+     #themeToggleBtn:hover {
+        border-color: var(--text-light);
+     }
+
 
     /* --- Responsive Design --- */
-    @media (max-width: 1200px) { .app-container { grid-template-columns: 300px 1fr 250px; gap: 20px; padding: 0 20px 20px 20px; } .sidebar { flex-basis: 300px; } .instructions-sidebar { flex-basis: 250px; } }
-    @media (max-width: 992px) { .app-container { grid-template-columns: 300px 1fr; grid-template-rows: auto auto; } .sidebar { grid-row: 1 / 2; grid-column: 1 / 2; } .main-content { grid-row: 1 / 2; grid-column: 2 / 3; } .instructions-sidebar { grid-row: 2 / 3; grid-column: 1 / 3; max-height: none; margin-top: 20px; } }
-    @media (max-width: 768px) {
-        .app-container { display: flex; flex-direction: column; padding: 0 15px 15px 15px; gap: 20px; }
-        .sidebar, .instructions-sidebar { flex: 0 0 auto; width: 100%; max-height: none; box-sizing: border-box; margin-bottom: 0; }
-        .instructions-sidebar { margin-top: 0; }
-        .main-content { width: 100%; box-sizing: border-box; }
-        .timer-container { flex-direction: column; padding: 20px; gap: 15px; } /* Stack vertically */
-        .timer-display-area { min-height: 120px; padding: 15px;}
-        .lap-button { order: 3; /* Place button last */ margin-top: 10px; width: 70px; height: 70px; font-size: 1.1em; }
-        .counter-display-area { order: 1; /* Place counter first */ width: auto; height: auto; border-radius: 6px; padding: 5px 10px; margin-bottom: 0; }
-        #elementCounter { font-size: 1.8em; }
-        .counter-display-area .box-label { font-size: 0.7em; margin-top: 0;}
-        #elementTimer { font-size: clamp(2.5rem, 10vw, 5rem); } /* Adjust font */
-        .timer-display-area { order: 2; } /* Timer in middle */
-        .log-section { min-height: auto; max-height: 40vh; }
-        #elementLog { max-height: 35vh; }
-        .utility-buttons-container { flex-direction: column; gap: 10px; }
-    }
-     @media (max-width: 480px) { /* Even smaller screens */
-         .timer-container { gap: 10px; padding: 15px;}
-         .lap-button { width: 60px; height: 60px; font-size: 1em;}
-         #elementTimer { font-size: clamp(2rem, 9vw, 4rem); }
-         #elementCounter { font-size: 1.5em; }
-         .counter-display-area .box-label { font-size: 0.6em;}
-     }
+    @media (max-width: 1200px) { .app-container { grid-template-columns: 280px 1fr; /* Adjusted for fixed right sidebar */ gap: 20px; padding: 0 20px 20px 20px; } }
+    @media (max-width: 992px) { .app-container { grid-template-columns: 300px 1fr; grid-template-rows: auto; } .sidebar { grid-row: auto; grid-column: auto; } .main-content { grid-row: auto; grid-column: auto; } /* Instructions sidebar is fixed, no grid placement needed */ }
+    @media (max-width: 768px) { .app-container { display: flex; flex-direction: column; padding: 0 15px 15px 15px; gap: 20px; } .sidebar, .instructions-sidebar { flex: 0 0 auto; width: 100%; max-height: none; box-sizing: border-box; margin-bottom: 0; } .instructions-sidebar { position: fixed; width: 280px; /* Adjust width for smaller screens */ top: 0; right: 0; height: 100vh; transform: translateX(100%); } .instructions-sidebar.expanded + #toggleInstructionsBtn { transform: translateY(-50%) translateX(-280px); } #toggleInstructionsBtn { display: flex; /* Ensure toggle is visible and flex works */ } .main-content { width: 100%; box-sizing: border-box; } .timer-container { flex-direction: column; padding: 20px; gap: 15px; } .timer-display-area { min-height: 120px; padding: 15px;} .timer-controls { flex-wrap: wrap; justify-content: center; gap: 15px;} .lap-button { order: 1; /* Adjust order */ margin-top: 0; width: 70px; height: 70px; font-size: 1.1em; } .control-btn { width: 55px; height: 55px; font-size: 0.8em;} .pause-play-btn { order: 2; } .stop-btn { order: 3; } .counter-display-area { order: 0; width: auto; height: auto; border-radius: 6px; padding: 5px 10px; margin-bottom: 0; } #elementCounter { font-size: 1.8em; } .counter-display-area .box-label { font-size: 0.7em; margin-top: 0;} #elementTimer { font-size: clamp(2.5rem, 10vw, 5rem); } .timer-display-area { order: 0; /* Adjust order */ } .log-section { min-height: auto; max-height: 40vh; } #elementLog { max-height: 35vh; } .utility-buttons-container { flex-direction: column; gap: 10px; } }
+    @media (max-width: 480px) { .timer-container { gap: 10px; padding: 15px;} .lap-button { width: 60px; height: 60px; font-size: 1em;} .control-btn { width: 50px; height: 50px; font-size: 0.7em;} #elementTimer { font-size: clamp(2rem, 9vw, 4rem); } #elementCounter { font-size: 1.5em; } .counter-display-area .box-label { font-size: 0.6em;} .instructions-sidebar { width: 250px;} .instructions-sidebar.expanded + #toggleInstructionsBtn { transform: translateY(-50%) translateX(-250px); } }
 
   </style>
 </head>
 <body>
-  <h1>Task Timer - Element Tracker v2</h1>
+  <button id="themeToggleBtn" title="Toggle Theme">☀️ / 🌙</button> <h1>Task Timer - Element Tracker v2</h1>
 
   <div id="messageArea"></div>
 
@@ -281,60 +476,68 @@
 
     <div class="sidebar">
       <div class="setup-section" id="project-setup">
-        <h3 id="projectHeader">
-            <span class="section-title">Project</span>
-            <span class="selected-item-name" id="selectedProjectName"></span>
-        </h3>
-        <div class="collapsible-content">
-            <div class="input-group"> <label for="projectSelect">Select Existing:</label> <select id="projectSelect"></select> </div>
-            <div class="input-group"> <label for="projectName">Name:</label> <input type="text" id="projectName" placeholder="New or Selected Project Name"> </div>
-            <div class="input-group"> <label for="projectDesc">Description:</label> <input type="text" id="projectDesc" placeholder="Project Description"> </div>
-            <div class="input-group"> <button id="startProjectBtn" title="Create new project or load project name from input field">Start/Load Project</button> </div>
+        <div class="section-header">
+            <h3><span class="section-title">Project</span> <span class="selected-item-name" id="selectedProjectName"></span></h3>
+            <button class="toggle-section-btn" aria-label="Toggle Project Section"></button>
         </div>
+        <div class="collapsible-content"> <div class="input-group"> <label for="projectSelect">Select Existing:</label> <select id="projectSelect"></select> </div> <div class="input-group"> <label for="projectName">Name:</label> <input type="text" id="projectName" placeholder="New or Selected Project Name"> </div> <div class="input-group"> <label for="projectDesc">Description:</label> <input type="text" id="projectDesc" placeholder="Project Description"> </div> <div class="input-group"> <button id="startProjectBtn" title="Create new project or load project name from input field">Start/Load Project</button> </div> </div>
         <div class="display-item"><span class="label">Started:</span> <span class="value" id="projectStart">-</span></div>
         <div class="display-item"><span class="label">Total Time:</span> <span class="value" id="projectTotalTime">0h 0m 0s</span></div>
       </div>
 
       <div class="setup-section collapsed" id="sprint-setup">
-        <h3 id="sprintHeader">
-            <span class="section-title">Sprint</span>
-            <span class="selected-item-name" id="selectedSprintName"></span>
-        </h3>
-         <div class="collapsible-content">
-             <div class="input-group"> <label for="sprintSelect">Select Existing:</label> <select id="sprintSelect" disabled></select> </div>
-             <div class="input-group"> <label for="sprintName">Name:</label> <input type="text" id="sprintName" placeholder="New or Selected Sprint Name" disabled> </div>
-             <div class="input-group"> <button id="startSprintBtn" disabled title="Create new sprint or load sprint name from input field">Start/Load Sprint</button> </div>
+         <div class="section-header">
+            <h3><span class="section-title">Sprint</span> <span class="selected-item-name" id="selectedSprintName"></span></h3>
+            <button class="toggle-section-btn" aria-label="Toggle Sprint Section"></button>
          </div>
+         <div class="collapsible-content"> <div class="input-group"> <label for="sprintSelect">Select Existing:</label> <select id="sprintSelect" disabled></select> </div> <div class="input-group"> <label for="sprintName">Name:</label> <input type="text" id="sprintName" placeholder="New or Selected Sprint Name" disabled> </div> <div class="input-group"> <button id="startSprintBtn" disabled title="Create new sprint or load sprint name from input field">Start/Load Sprint</button> </div> </div>
         <div class="display-item"><span class="label">Started:</span> <span class="value" id="sprintStart">-</span></div>
         <div class="display-item"><span class="label">Total Time:</span> <span class="value" id="sprintTotalTime">0h 0m 0s</span></div>
       </div>
 
       <div class="setup-section collapsed" id="task-setup">
-        <h3 id="taskHeader">
-            <span class="section-title">Task</span>
-            <span class="selected-item-name" id="selectedTaskName"></span>
-        </h3>
-         <div class="collapsible-content">
-             <div class="input-group"> <label for="taskSelect">Select Existing:</label> <select id="taskSelect" disabled></select> </div>
-             <div class="input-group"> <label for="taskName">Name:</label> <input type="text" id="taskName" placeholder="New or Selected Task Name" disabled> </div>
-             <div class="input-group"> <button id="startTaskBtn" disabled title="Start timing first/next element for the selected/entered task">Start Task</button> </div>
+         <div class="section-header">
+             <h3><span class="section-title">Task</span> <span class="selected-item-name" id="selectedTaskName"></span></h3>
+             <button class="toggle-section-btn" aria-label="Toggle Task Section"></button>
          </div>
+         <div class="collapsible-content"> <div class="input-group"> <label for="taskSelect">Select Existing:</label> <select id="taskSelect" disabled></select> </div> <div class="input-group"> <label for="taskName">Name:</label> <input type="text" id="taskName" placeholder="New or Selected Task Name" disabled> </div> <div class="input-group"> <button id="startTaskBtn" disabled title="Start timing first/next element for the selected/entered task">Start Task</button> </div> </div>
         <div class="display-item"><span class="label">Started:</span> <span class="value" id="taskStart">-</span></div>
         <div class="display-item"><span class="label">Total Time:</span> <span class="value" id="taskTotalTime">0h 0m 0s</span></div>
       </div>
-    </div> <div class="main-content">
-      <div class="timer-container">
-          <div class="counter-display-area"> <span id="elementCounter">0</span>
+    </div>
+
+    <div class="main-content">
+      <div class="timer-container" id="timerContainer">
+          <button id="fullscreenBtn" class="fullscreen-toggle-btn" title="Toggle Fullscreen Timer"></button>
+          <div class="counter-display-area">
+              <span id="elementCounter">0</span>
               <span class="box-label">Elements</span>
           </div>
-          <div class="timer-display-area"> <span class="box-label">Current Element Time</span>
-              <span id="elementTimer">0:00</span>
+          <div class="timer-display-area">
+              <span class="box-label">Current Element Time</span>
+              <span id="elementTimer">00:00:00</span>
           </div>
-          <button class="lap-button" id="completeElementBtn" title="Complete Element / Lap">Lap</button> </div>
+          <div class="timer-controls">
+              <button id="pausePlayBtn" class="control-btn pause-play-btn" title="Pause Timer" disabled>Pause</button>
+              <button class="lap-button" id="completeElementBtn" title="Complete Element / Lap" disabled>Lap</button>
+              <button id="stopBtn" class="control-btn stop-btn" title="Stop Timer & Log Element" disabled>Stop</button>
+          </div>
+           <div id="fullscreenTicker" class="fullscreen-ticker">
+               <span></span>
+           </div>
+      </div>
+       <div class="ticker-input-container" id="tickerInputContainer">
+            <input type="text" id="tickerInput" placeholder="Enter ticker text for fullscreen...">
+            <button id="setTickerBtn" title="Set Ticker Text">Set</button>
+        </div>
+        <a href="#" id="changeTickerLink" style="display: none;">click to change ticker message</a>
 
-      <div class="log-section" id="log-section"> <h3 id="logHeader"> <span class="section-title">Project Log</span>
-              </h3>
-          <div class="collapsible-content"> <div class="log-controls">
+      <div class="log-section collapsed" id="log-section"> <div class="section-header">
+              <h3><span class="section-title">Project Log</span></h3>
+              <button class="toggle-section-btn" aria-label="Toggle Log Section"></button>
+          </div>
+          <div class="collapsible-content">
+              <div class="log-controls">
                   <button id="expandAllLogBtn">Expand All</button>
                   <button id="collapseAllLogBtn">Collapse All</button>
               </div>
@@ -345,23 +548,31 @@
               </div>
           </div>
       </div>
-    </div> <div class="instructions-sidebar">
+    </div>
+
+    <div class="instructions-sidebar" id="instructionsSidebar">
         <h3>How To Use</h3>
-        <h4>Hierarchy</h4>
-        <p>Work is organized as: <code>Project</code> > <code>Sprint</code> > <code>Task</code> > <code>Element</code>.</p>
-        <h4>Setup Workflow</h4>
-        <ul> <li>Start with <strong>Project</strong>. Select existing or type name/desc & click <code>Start/Load Project</code>.</li> <li>Once project active, <strong>Sprint</strong> enables. Select or create/load sprint.</li> <li>Once sprint active, <strong>Task</strong> enables. Select or create/load task.</li> <li>Click section headers (Project, Sprint, Task) to expand/collapse. Selected name shows when collapsed.</li> </ul>
-        <h4>Timing Elements</h4>
-        <ul> <li>With task active, click <code>Start Task</code> to time first element.</li> <li>Timer shows time for <strong>current element</strong>.</li> <li>Click the red <code>Lap</code> button to <strong>complete</strong> current element.</li> <li>This logs time, updates totals, increments counter, & starts timer for <strong>next element</strong>.</li> </ul>
-         <h4>Controls Lock</h4>
-        <ul> <li>While timer runs, sidebar & utility buttons are disabled.</li> <li>Click <code>Lap</code> or refresh page (with warning) to enable controls.</li> <li><strong>Project Log</strong> remains interactive while timer runs.</li> </ul>
-        <h4>Project Log</h4>
-         <ul> <li>Shows Sprints, Tasks, & completed Elements for selected Project.</li> <li>Click Sprint/Task headers to expand/collapse. Use <code>Expand/Collapse All</code> buttons.</li> <li>Totals shown are sums of completed elements.</li> <li>Click main "Project Log" header to collapse/expand log section.</li> </ul>
-    </div> </div> <script>
+        <h4>Hierarchy</h4> <p>Work is organized as: <code>Project</code> > <code>Sprint</code> > <code>Task</code> > <code>Element</code>.</p>
+        <h4>Setup Workflow</h4> <ul> <li>Start with <strong>Project</strong>. Select existing or type name/desc & click <code>Start/Load Project</code>.</li> <li>Once project active, <strong>Sprint</strong> enables. Select or create/load sprint.</li> <li>Once sprint active, <strong>Task</strong> enables. Select or create/load task.</li> <li>Click the +/- button next to section headers to expand/collapse. Selected name shows when collapsed.</li> </ul>
+        <h4>Timing Elements</h4> <ul> <li>With task active, click <code>Start Task</code> to time first element.</li> <li>Timer shows time for <strong>current element</strong> (HH:MM:SS).</li> <li>Click <code>Pause</code>/<code>Play</code> to pause/resume the timer.</li> <li>Click the red <code>Lap</code> button to <strong>complete</strong> current element.</li> <li>Click <code>Stop</code> to **log** the current element time and stop the timer.</li> <li>Use the ⛶ button on the timer to enter/exit fullscreen mode. Click background to exit.</li> <li>Enter text below timer and click "Set" to show a scrolling ticker in fullscreen mode.</li></ul>
+         <h4>Controls Lock</h4> <ul> <li>While timer runs, sidebar & utility buttons are disabled.</li> <li>Click <code>Lap</code>, <code>Stop</code> or refresh page (with warning) to enable controls.</li> <li><strong>Project Log</strong> remains interactive while timer runs.</li> </ul>
+        <h4>Project Log</h4> <ul> <li>Shows Sprints, Tasks, & completed Elements for selected Project.</li> <li>Click +/- buttons in log headers to expand/collapse. Use <code>Expand/Collapse All</code> buttons.</li> <li>Totals shown are sums of completed elements.</li> <li>Click main "Project Log" header button (+/-) to collapse/expand log section.</li> </ul>
+        <h4>Theme</h4> <ul><li>Click the ☀️ / 🌙 button in the top right to toggle light/dark mode.</li></ul>
+    </div>
+    <button id="toggleInstructionsBtn" class="sidebar-tab" title="Toggle Instructions">
+        <span class="tab-text">Tool guidelines</span>
+        <span class="tab-arrow">&lt;</span>
+    </button>
+
+  </div> <script>
     // --- Global State ---
     let elementCompletionCounter = 0;
     let currentElementSeconds = 0;
     let timerIntervalId = null;
+    let currentElementStartTime = null; // Added for visibility correction
+    let isPaused = false; // Added for Pause/Play state
+    let pauseStartTime = null; // Added for Pause duration calculation
+    let tickerText = ''; // Added for fullscreen ticker
     let currentProject = null;
     let currentSprint = null;
     let currentTask = null;
@@ -388,29 +599,73 @@
     const startProjectBtn = document.getElementById('startProjectBtn');
     const startSprintBtn = document.getElementById('startSprintBtn');
     const startTaskBtn = document.getElementById('startTaskBtn');
-    const completeElementBtn = document.getElementById('completeElementBtn'); // Still refers to the button, even if class changed
+    const completeElementBtn = document.getElementById('completeElementBtn'); // Refers to the lap button
     const clearLogBtn = document.getElementById('clearLogBtn');
     const downloadCSVBtn = document.getElementById('downloadCSVBtn');
     const projectSetupSection = document.getElementById('project-setup');
     const sprintSetupSection = document.getElementById('sprint-setup');
     const taskSetupSection = document.getElementById('task-setup');
-    const projectHeader = document.getElementById('projectHeader');
-    const sprintHeader = document.getElementById('sprintHeader');
-    const taskHeader = document.getElementById('taskHeader');
     const selectedProjectNameSpan = document.getElementById('selectedProjectName');
     const selectedSprintNameSpan = document.getElementById('selectedSprintName');
     const selectedTaskNameSpan = document.getElementById('selectedTaskName');
     const expandAllLogBtn = document.getElementById('expandAllLogBtn');
     const collapseAllLogBtn = document.getElementById('collapseAllLogBtn');
     const logSection = document.getElementById('log-section');
-    const logHeader = document.getElementById('logHeader');
+    const fullscreenBtn = document.getElementById('fullscreenBtn'); // Fullscreen button
+    const timerContainerElement = document.getElementById('timerContainer'); // Timer container
+    const stopBtn = document.getElementById('stopBtn'); // Stop button
+    const pausePlayBtn = document.getElementById('pausePlayBtn'); // Pause/Play button
+    const tickerInputElement = document.getElementById('tickerInput'); // Ticker input
+    const setTickerBtn = document.getElementById('setTickerBtn'); // Set Ticker button
+    const fullscreenTickerElement = document.getElementById('fullscreenTicker'); // Ticker display div
+    const tickerInputContainer = document.getElementById('tickerInputContainer'); // Ticker input container
+    const changeTickerLink = document.getElementById('changeTickerLink'); // Link to change ticker
+    const themeToggleBtn = document.getElementById('themeToggleBtn'); // Theme toggle button
+    const instructionsSidebar = document.getElementById('instructionsSidebar'); // Instructions sidebar
+    const toggleInstructionsBtn = document.getElementById('toggleInstructionsBtn'); // Instructions toggle button
 
 
     // --- Utility Functions ---
-    function clearMessage() { messageArea.textContent = ''; messageArea.className = ''; messageArea.style.display = 'none'; }
-    function showMessage(text, type = 'info') { messageArea.textContent = text; messageArea.className = type; messageArea.style.display = 'block'; }
+    function clearMessage() {
+        if (showMessage.timeoutId) {
+            clearTimeout(showMessage.timeoutId);
+            showMessage.timeoutId = null;
+        }
+        messageArea.textContent = '';
+        messageArea.className = '';
+        messageArea.style.display = 'none';
+    }
+    showMessage.timeoutId = null; // Initialize static variable for timeout
+
+    function showMessage(text, type = 'info', duration = null) { // Added duration parameter
+        clearMessage(); // Clear previous message and timeout first
+        messageArea.textContent = text;
+        messageArea.className = type;
+        messageArea.style.display = 'block';
+
+        // Set new timeout if duration is provided
+        if (duration && typeof duration === 'number' && duration > 0) {
+            showMessage.timeoutId = setTimeout(() => {
+                // Only clear if the message hasn't changed since timeout was set
+                if (messageArea.textContent === text) {
+                    clearMessage();
+                }
+            }, duration);
+        }
+    }
+
     function formatTimeDetailed(sec) { const s = Math.max(0, Math.floor(sec)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60; return `${h}h ${m}m ${r}s`; }
+    // Updated function for HH:MM:SS format
+    function formatTimeHMS(totalSeconds) {
+        const s = Math.max(0, Math.floor(totalSeconds));
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const r = s % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${r.toString().padStart(2, '0')}`;
+    }
+    // Old formatTimeSimple (still used for log duration potentially)
     function formatTimeSimple(sec) { const s = Math.max(0, Math.floor(sec)), m = Math.floor(s / 60), r = s % 60; return `${m}:${r.toString().padStart(2, '0')}`; }
+
     function parseTimeSimple(str) { if (!str || typeof str !== 'string') return 0; const p = str.split(':'); if (p.length === 2) { const m = parseInt(p[0], 10), s = parseInt(p[1], 10); if (!isNaN(m) && !isNaN(s)) return m * 60 + s; } return 0; }
     function formatDisplayDate(ds) { if (!ds) return '-'; try { const d = new Date(ds); if (!isNaN(d.getTime())) return d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }); } catch (e) { console.warn("Error formatting date:", ds, e); } return ds.length > 16 ? ds.substring(0, 16) + '...' : ds; }
     function populateSelect(el, opts, ph, selVal = "") { const uOpts = [...new Set(opts)].filter(o => o); const curVal = el.value; el.innerHTML = `<option value="">${ph}</option>`; uOpts.forEach(o => { const opt = document.createElement('option'); opt.value = opt.textContent = o; el.appendChild(opt); }); if (uOpts.includes(curVal) && !selVal) { el.value = curVal; } else { el.value = selVal; } if (el.id !== 'projectSelect') { el.disabled = !uOpts.length && !el.value; } }
@@ -442,8 +697,8 @@
             sprintItem.className = 'log-item log-sprint collapsed';
             const sprintHeaderDiv = document.createElement('div');
             sprintHeaderDiv.className = 'log-header';
-            sprintHeaderDiv.innerHTML = `<span class="title">Sprint: ${sprintName}</span><span class="details">(Total: ${formatTimeDetailed(sprintGroup.totalSeconds)})</span><span class="toggle-icon">▼</span>`;
-            sprintHeaderDiv.onclick = () => sprintItem.classList.toggle('collapsed');
+            // Use button for toggle in log items
+            sprintHeaderDiv.innerHTML = `<span class="title">Sprint: ${sprintName}</span><span class="details">(Total: ${formatTimeDetailed(sprintGroup.totalSeconds)})</span><button class="toggle-section-btn log-item-toggle-btn" aria-label="Toggle Sprint Details"></button>`;
             const sprintContentDiv = document.createElement('div');
             sprintContentDiv.className = 'log-content';
             sprintGroup.tasks.forEach((taskGroup, taskName) => {
@@ -451,8 +706,8 @@
                 taskItem.className = 'log-item log-task collapsed';
                 const taskHeaderDiv = document.createElement('div');
                 taskHeaderDiv.className = 'log-header';
-                taskHeaderDiv.innerHTML = `<span class="title">Task: ${taskName}</span><span class="details">(Total: ${formatTimeDetailed(taskGroup.totalSeconds)}) (${taskGroup.elements.length} Elems)</span><span class="toggle-icon">▼</span>`;
-                taskHeaderDiv.onclick = (e) => { e.stopPropagation(); taskItem.classList.toggle('collapsed'); };
+                 // Use button for toggle in log items
+                taskHeaderDiv.innerHTML = `<span class="title">Task: ${taskName}</span><span class="details">(Total: ${formatTimeDetailed(taskGroup.totalSeconds)}) (${taskGroup.elements.length} Elems)</span><button class="toggle-section-btn log-item-toggle-btn" aria-label="Toggle Task Details"></button>`;
                 const taskContentDiv = document.createElement('div');
                 taskContentDiv.className = 'log-content';
                 taskGroup.elements.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -505,9 +760,9 @@
         taskNameInput.disabled = !sprintSelected;
         startTaskBtn.disabled = true; // Start task always disabled on reset
         startTaskBtn.title = sprintSelected ? "Select or enter a task first" : "Select a sprint first";
-        // Do not collapse task section on reset
-        // collapseSection(taskSetupSection);
         stopTimer(false);
+        // Reset timer display to 00:00:00
+        elementTimerElement.textContent = formatTimeHMS(0);
         updateHierarchicalLogDisplay(); // Update log display
     }
 
@@ -516,10 +771,27 @@
         if (timerIntervalId) {
             clearInterval(timerIntervalId);
             timerIntervalId = null;
-            if (showAlert) { showMessage("Timer stopped.", 'info'); }
+            currentElementStartTime = null; // Clear element start time
+            if (showAlert) { showMessage("Timer stopped.", 'info', 3000); } // Auto-hide info
         }
+        isPaused = false; // Ensure not paused
+        pauseStartTime = null;
+        pausePlayBtn.textContent = 'Pause';
+        pausePlayBtn.title = 'Pause Timer';
+
         // Always update control states when timer stops
         setControlsDisabled(false); // Re-enable controls based on context
+        // Explicitly disable control buttons when timer stops
+        completeElementBtn.disabled = true;
+        completeElementBtn.title = "Start timer first";
+        pausePlayBtn.disabled = true;
+        pausePlayBtn.title = "Start timer first";
+        stopBtn.disabled = true;
+        stopBtn.title = "Start timer first";
+
+        // Reset timer display
+        currentElementSeconds = 0;
+        elementTimerElement.textContent = formatTimeHMS(currentElementSeconds);
     }
 
     /** Enables/disables controls based on timer state */
@@ -530,6 +802,7 @@
         const taskButtonTitle = isDisabled ? timerRunningReason : currentTask ? "Start timing first/next element for this task" : "Select or enter a task first";
         const otherButtonTitle = isDisabled ? timerRunningReason : "";
 
+        // Sidebar controls
         projectSelect.disabled = isDisabled;
         projectNameInput.disabled = isDisabled;
         projectDescInput.disabled = isDisabled;
@@ -549,17 +822,31 @@
         downloadCSVBtn.disabled = isDisabled;
         downloadCSVBtn.title = otherButtonTitle;
 
-        // Explicitly set complete button state based ONLY on timerIntervalId
-        completeElementBtn.disabled = !timerIntervalId;
-        completeElementBtn.title = timerIntervalId ? "Complete Element / Lap" : "Start timer first";
+        // Sidebar toggle buttons
+        const enableSidebarToggles = !isDisabled;
+        projectSetupSection.querySelector('.toggle-section-btn').disabled = !enableSidebarToggles;
+        sprintSetupSection.querySelector('.toggle-section-btn').disabled = !enableSidebarToggles;
+        taskSetupSection.querySelector('.toggle-section-btn').disabled = !enableSidebarToggles;
+        // KEEP Log section toggle enabled always
+        // logSection.querySelector('.toggle-section-btn').disabled = isDisabled;
 
-        projectHeader.style.pointerEvents = isDisabled ? 'none' : 'auto';
-        sprintHeader.style.pointerEvents = isDisabled ? 'none' : 'auto';
-        taskHeader.style.pointerEvents = isDisabled ? 'none' : 'auto';
-        logHeader.style.pointerEvents = isDisabled ? 'none' : 'auto'; // Also disable log collapse when timing
+        // Handle Timer Control Buttons
+        const timerIsActive = !!timerIntervalId || isPaused;
+        completeElementBtn.disabled = !timerIntervalId || isPaused; // Disable Lap if not running or paused
+        stopBtn.disabled = !timerIsActive; // Disable Stop if timer never started or is stopped
+        pausePlayBtn.disabled = !timerIsActive; // Disable Pause/Play if timer never started or is stopped
 
-        if (isDisabled) { showMessage("Timer running. Stop timer to change project/sprint/task or perform other actions.", "warning"); }
-        else { if (messageArea.textContent.startsWith("Timer running")) { clearMessage(); } }
+        completeElementBtn.title = completeElementBtn.disabled ? "Start timer first" : "Complete Element / Lap";
+        stopBtn.title = stopBtn.disabled ? "Start timer first" : "Stop Timer & Log Element"; // Updated title
+        pausePlayBtn.title = pausePlayBtn.disabled ? "Start timer first" : (isPaused ? "Resume Timer" : "Pause Timer");
+
+
+        // Disable fullscreen button while timer is stopped? Optional, maybe keep enabled.
+        // fullscreenBtn.disabled = isDisabled;
+
+        if (isDisabled && !isPaused) { showMessage("Timer running. Stop timer to change project/sprint/task or perform other actions.", "warning"); } // Persistent warning
+        else if (isPaused) { showMessage("Timer paused.", "info", 5000); } // Auto-hide pause message
+        else { if (messageArea.textContent.startsWith("Timer running") || messageArea.textContent.startsWith("Timer paused")) { clearMessage(); } }
     }
 
 
@@ -685,9 +972,9 @@
             elementCounterElement.textContent = elementCompletionCounter;
             selectedTaskNameSpan.textContent = `- ${currentTask.name}`;
 
-            stopTimer(false);
+            stopTimer(false); // Also resets timer display via setControlsDisabled
             currentElementSeconds = 0;
-            elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+            // elementTimerElement.textContent = formatTimeHMS(currentElementSeconds); // Already done in stopTimer
             startTaskBtn.disabled = false;
             startTaskBtn.title = "Start timing first/next element for this task";
 
@@ -703,6 +990,49 @@
         }
          updateHierarchicalLogDisplay();
     }
+
+     /** Handles Task input change */
+     function handleTaskInputChange() {
+        const taskName = taskNameInput.value.trim();
+        // Enable Start Task button if input has text AND a sprint is selected,
+        // AND the timer is not currently running.
+        const canEnable = taskName && currentSprint && !timerIntervalId;
+        startTaskBtn.disabled = !canEnable;
+         startTaskBtn.title = canEnable ? "Start timing first/next element for this task" :
+                               !currentSprint ? "Select a sprint first" :
+                               timerIntervalId ? "Stop the current timer first." : "Enter a task name";
+
+        // If the input value matches an existing task in the dropdown, select it
+        const taskExistsInDropdown = Array.from(taskSelect.options).find(opt => opt.value === taskName);
+        if (taskExistsInDropdown) {
+            if (taskSelect.value !== taskName) {
+                taskSelect.value = taskName;
+                // Trigger change handler to load data for the selected task
+                handleTaskChange();
+            }
+        } else {
+            // If user typed something that's NOT in dropdown, deselect dropdown
+            if (taskSelect.value) {
+                taskSelect.value = "";
+                // Reset task-specific displays if deselecting dropdown via typing
+                if (currentTask) {
+                    currentTask = null; // Clear current task context if input differs
+                    taskStartElement.textContent = '-';
+                    taskTotalTimeElement.textContent = formatTimeDetailed(0);
+                    elementCompletionCounter = 0;
+                    elementCounterElement.textContent = '0';
+                    selectedTaskNameSpan.textContent = '';
+                    updateHierarchicalLogDisplay();
+                }
+            }
+             // Ensure button is enabled if text is present (handled by canEnable logic above)
+             else if(canEnable) {
+                  startTaskBtn.disabled = false;
+                  startTaskBtn.title = "Start timing first/next element for this task";
+             }
+        }
+    }
+
 
     /** Handles Start/Load Project button click */
     async function handleStartProject() {
@@ -722,9 +1052,9 @@
                     currentProject.description = desc;
                     projectDescInput.value = desc;
                     console.log("Project description updated locally for:", name);
-                    showMessage(`Project '${name}' description updated locally (not saved).`, 'info');
+                    showMessage(`Project '${name}' description updated locally (not saved).`, 'info', 3000);
                  } else {
-                    showMessage(`Project '${name}' is already selected.`, 'info');
+                    showMessage(`Project '${name}' is already selected.`, 'info', 3000);
                  }
                  startProjectBtn.disabled = true;
                  startProjectBtn.title = "Project loaded. Use dropdown or input field to change/create.";
@@ -766,7 +1096,7 @@
             };
             allLogData.push(creationLog);
             const saved = await saveLogEntry(creationLog);
-            if (saved) { showMessage(`New project '${name}' created and saved. Start a sprint.`, 'success'); }
+            if (saved) { showMessage(`New project '${name}' created and saved. Start a sprint.`, 'success', 3000); }
             else { showMessage(`New project '${name}' created locally. Save failed.`, 'error'); }
             updateHierarchicalLogDisplay();
         }
@@ -787,7 +1117,7 @@
                 sprintSelect.dispatchEvent(new Event('change'));
             } else {
                  handleSprintChange();
-                 showMessage(`Sprint '${name}' is already selected, refreshing data.`, 'info');
+                 showMessage(`Sprint '${name}' is already selected, refreshing data.`, 'info', 3000);
                  startSprintBtn.disabled = true;
                  startSprintBtn.title = "Sprint loaded. Use dropdown or input field to change/create.";
                  collapseSection(sprintSetupSection);
@@ -828,7 +1158,7 @@
             };
             allLogData.push(creationLog);
             const saved = await saveLogEntry(creationLog);
-            if (saved) { showMessage(`New sprint '${name}' created and saved. Select or enter a task.`, 'success'); }
+            if (saved) { showMessage(`New sprint '${name}' created and saved. Select or enter a task.`, 'success', 3000); }
             else { showMessage(`New sprint '${name}' created locally. Save failed.`, 'error'); }
             updateHierarchicalLogDisplay();
         }
@@ -874,19 +1204,27 @@
         selectedTaskNameSpan.textContent = `- ${currentTask.name}`;
 
         currentElementSeconds = 0;
-        elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
-
-        // Disable controls, enable complete button
-        setControlsDisabled(true); // Disables other controls
-        completeElementBtn.disabled = false; // Explicitly enable complete button
-        completeElementBtn.title = "Complete Element / Lap";
-
+        elementTimerElement.textContent = formatTimeHMS(currentElementSeconds); // Use HMS format
+        currentElementStartTime = Date.now(); // Record precise start time
+        isPaused = false; // Ensure not paused
+        pauseStartTime = null;
+        pausePlayBtn.textContent = 'Pause';
+        pausePlayBtn.title = 'Pause Timer';
 
         timerIntervalId = setInterval(() => {
             currentElementSeconds++;
-            elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+            elementTimerElement.textContent = formatTimeHMS(currentElementSeconds); // Use HMS format
         }, 1000);
-         showMessage(`Timer started for task '${currentTask.name}'.`, 'info');
+
+        // Enable controls AFTER interval is set
+        setControlsDisabled(true);
+        // These might have been disabled by setControlsDisabled(true) if timerIsActive was briefly false
+        completeElementBtn.disabled = false;
+        completeElementBtn.title = "Complete Element / Lap";
+        pausePlayBtn.disabled = false;
+        stopBtn.disabled = false;
+
+        showMessage(`Timer started for task '${currentTask.name}'.`, 'info', 3000); // Auto-hide
          // Do NOT collapse task section automatically
          // collapseSection(taskSetupSection);
     }
@@ -897,13 +1235,27 @@
         if (timerIntervalId) {
             clearInterval(timerIntervalId);
             timerIntervalId = null;
-            if (showAlert) { showMessage("Timer stopped.", 'info'); }
+            currentElementStartTime = null; // Clear element start time
+            if (showAlert) { showMessage("Timer stopped.", 'info', 3000); } // Auto-hide info
         }
+        isPaused = false; // Ensure not paused
+        pauseStartTime = null;
+        pausePlayBtn.textContent = 'Pause';
+        pausePlayBtn.title = 'Pause Timer';
+
         // Always update control states when timer stops
         setControlsDisabled(false); // Re-enable controls based on context
-        // Explicitly disable complete button when timer stops
+        // Explicitly disable control buttons when timer stops
         completeElementBtn.disabled = true;
         completeElementBtn.title = "Start timer first";
+        pausePlayBtn.disabled = true;
+        pausePlayBtn.title = "Start timer first";
+        stopBtn.disabled = true;
+        stopBtn.title = "Start timer first";
+
+        // Reset timer display
+        currentElementSeconds = 0;
+        elementTimerElement.textContent = formatTimeHMS(currentElementSeconds); // Use HMS format
     }
 
     /** Handles Complete Element button click - LOGS and RESTARTS timer */
@@ -912,11 +1264,24 @@
             showMessage("No active task selected.", 'error');
             return;
         }
-        // Allow completion even if timer somehow stopped between clicks,
-        // but only log if duration > 0? Or log 0 duration? Let's log 0.
-        // if (!timerIntervalId) { showMessage("Element timer is not running.", 'error'); return; }
+        // Timer must be running (not paused) for complete to make sense
+        if (!timerIntervalId || isPaused) {
+            showMessage("Timer is not running or is paused.", 'error');
+            return;
+        }
 
-        const elementDurationSeconds = currentElementSeconds; // Capture time
+        // Use actual elapsed time if possible, otherwise use counter
+        let elementDurationSeconds;
+        if (currentElementStartTime) {
+             const elapsedMillis = Date.now() - currentElementStartTime;
+             elementDurationSeconds = Math.max(0, Math.floor(elapsedMillis / 1000));
+             console.log(`Corrected duration: ${elementDurationSeconds}s (from ${currentElementSeconds}s)`);
+             currentElementSeconds = elementDurationSeconds; // Update state to match reality
+        } else {
+            console.warn("No element start time recorded, using counter value for duration.");
+            elementDurationSeconds = currentElementSeconds; // Fallback
+        }
+
 
         elementCompletionCounter++;
         currentTask.totalSeconds += elementDurationSeconds;
@@ -924,7 +1289,7 @@
         if (currentProject) currentProject.totalSeconds += elementDurationSeconds;
 
         const timestamp = new Date().toISOString();
-        const durationFormatted = formatTimeSimple(elementDurationSeconds);
+        const durationFormatted = formatTimeSimple(elementDurationSeconds); // Keep simple format for log? Or change to HMS? Let's keep simple for now.
 
         const logEntry = {
             project: currentProject?.name || 'N/A', projectDescription: currentProject?.description || '', projectStarted: currentProject?.started || '',
@@ -948,7 +1313,8 @@
 
         // Reset element timer state BUT keep interval running (or restart if needed)
         currentElementSeconds = 0;
-        elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+        elementTimerElement.textContent = formatTimeHMS(currentElementSeconds); // Use HMS format
+        currentElementStartTime = Date.now(); // Record start time for the *next* element
 
         // Ensure controls remain disabled and complete button remains enabled
         setControlsDisabled(true); // Keep other controls disabled
@@ -959,41 +1325,184 @@
         if (!timerIntervalId) {
              timerIntervalId = setInterval(() => {
                 currentElementSeconds++;
-                elementTimerElement.textContent = formatTimeSimple(currentElementSeconds);
+                elementTimerElement.textContent = formatTimeHMS(currentElementSeconds); // Use HMS format
             }, 1000);
              console.warn("Timer interval restarted unexpectedly in completeElement");
         }
 
 
         const saved = await saveLogEntry(logEntry);
-        if (saved) { showMessage(`Element ${elementCompletionCounter} completed. Next timer started.`, 'success'); }
+        if (saved) { showMessage(`Element ${elementCompletionCounter} completed. Next timer started.`, 'success', 3000); } // Auto-hide
         else { showMessage(`Element ${elementCompletionCounter} completed locally. Save failed. Next timer started.`, 'error'); }
+    }
+
+    /** Handles Stop button click - LOGS and stops */
+    async function handleStopClick() {
+        if (!timerIntervalId && !isPaused) {
+            showMessage("Timer is already stopped.", "info", 3000); // Auto-hide
+            return;
+        }
+         // Need a valid task context to log
+         if (!currentTask || !currentTask.name) {
+            showMessage("No active task selected to stop.", 'error');
+            stopTimer(true); // Still stop the timer if running/paused
+            return;
+        }
+
+
+        // If paused, calculate duration based on pause start
+        let elementDurationSeconds;
+        if (isPaused && pauseStartTime && currentElementStartTime) {
+             const elapsedMillis = pauseStartTime - currentElementStartTime; // Time before pause started
+             elementDurationSeconds = Math.max(0, Math.floor(elapsedMillis / 1000));
+             console.log(`Stopped while paused. Duration: ${elementDurationSeconds}s`);
+             currentElementSeconds = elementDurationSeconds; // Update state to match reality
+        }
+        // If running, calculate duration based on current time
+        else if (currentElementStartTime) {
+             const elapsedMillis = Date.now() - currentElementStartTime;
+             elementDurationSeconds = Math.max(0, Math.floor(elapsedMillis / 1000));
+             console.log(`Stopped while running. Corrected duration: ${elementDurationSeconds}s (from ${currentElementSeconds}s)`);
+             currentElementSeconds = elementDurationSeconds; // Update state to match reality
+        } else {
+            console.warn("No element start time recorded, using counter value for duration.");
+            elementDurationSeconds = currentElementSeconds; // Fallback
+        }
+
+        // --- Logging Logic (Similar to handleCompleteElement) ---
+        elementCompletionCounter++; // Increment counter even on stop? Or only on Lap? Let's increment.
+        currentTask.totalSeconds += elementDurationSeconds;
+        if (currentSprint) currentSprint.totalSeconds += elementDurationSeconds;
+        if (currentProject) currentProject.totalSeconds += elementDurationSeconds;
+
+        const timestamp = new Date().toISOString();
+        const durationFormatted = formatTimeSimple(elementDurationSeconds);
+
+        const logEntry = {
+            project: currentProject?.name || 'N/A', projectDescription: currentProject?.description || '', projectStarted: currentProject?.started || '',
+            sprint: currentSprint?.name || 'N/A', sprintStarted: currentSprint?.started || '',
+            task: currentTask.name, taskStarted: currentTask.started || '',
+            elementType: 'element', status: 'completed', // Log as 'completed' or maybe 'stopped'? Let's use 'completed'.
+            duration: durationFormatted,
+            elementDurationSeconds: elementDurationSeconds, timestamp: timestamp,
+            elementCountInTask: elementCompletionCounter,
+            taskTotalSeconds: currentTask.totalSeconds,
+            sprintTotalSeconds: currentSprint?.totalSeconds || 0,
+            projectTotalSeconds: currentProject?.totalSeconds || 0
+        };
+
+        elementCounterElement.textContent = elementCompletionCounter;
+        taskTotalTimeElement.textContent = formatTimeDetailed(currentTask.totalSeconds);
+        if (currentSprint) sprintTotalTimeElement.textContent = formatTimeDetailed(currentSprint.totalSeconds);
+        if (currentProject) projectTotalTimeElement.textContent = formatTimeDetailed(currentProject.totalSeconds);
+
+        allLogData.push(logEntry);
+        updateHierarchicalLogDisplay(); // Update log display
+        // --- End Logging Logic ---
+
+        // Stop timer and reset UI
+        stopTimer(false); // Stop timer, don't show default "stopped" message
+        showMessage("Timer stopped. Element logged.", "warning"); // Persistent warning
+
+        // Re-enable Start Task button if applicable
+        if (currentTask) {
+            startTaskBtn.disabled = false;
+            startTaskBtn.title = "Start timing first/next element for this task";
+        }
+
+        // Save the log entry
+        await saveLogEntry(logEntry);
+    }
+
+
+    /** Handles Pause/Play button click */
+    function handlePausePlayClick() {
+        // Do nothing if timer hasn't started at all
+        if (!timerIntervalId && !isPaused) {
+             showMessage("Timer not started.", "info", 3000); // Auto-hide
+             return;
+        }
+
+        if (isPaused) {
+            // --- Resume ---
+            if (!pauseStartTime) { // Check if pauseStartTime is missing
+                 console.error("Cannot resume: pauseStartTime is missing. Resetting timer.");
+                 showMessage("Error resuming timer state. Please stop and restart.", "error");
+                 // Optionally stop the timer completely here?
+                 // stopTimer(false);
+                 return;
+            }
+            if (currentElementStartTime) {
+                const pausedDuration = Date.now() - pauseStartTime;
+                currentElementStartTime += pausedDuration; // Adjust start time forward
+                console.log(`Resumed. Paused for ${Math.round(pausedDuration/1000)}s. Adjusted start time.`);
+            } else {
+                 console.warn("Cannot adjust start time on resume as it's missing.");
+                 currentElementStartTime = Date.now() - (currentElementSeconds * 1000); // Estimate start based on current seconds
+            }
+
+
+            isPaused = false;
+            pauseStartTime = null;
+            pausePlayBtn.textContent = 'Pause';
+            pausePlayBtn.title = 'Pause Timer';
+            completeElementBtn.disabled = false; // Re-enable Lap
+            stopBtn.disabled = false; // Re-enable Stop
+
+            // Restart interval
+            timerIntervalId = setInterval(() => {
+                currentElementSeconds++;
+                elementTimerElement.textContent = formatTimeHMS(currentElementSeconds);
+            }, 1000);
+            showMessage("Timer resumed.", "info", 3000); // Auto-hide
+
+        } else {
+            // --- Pause ---
+            if (timerIntervalId) {
+                clearInterval(timerIntervalId);
+                timerIntervalId = null;
+                isPaused = true;
+                pauseStartTime = Date.now();
+                pausePlayBtn.textContent = 'Play';
+                pausePlayBtn.title = 'Resume Timer';
+                completeElementBtn.disabled = true; // Disable Lap while paused
+                // Keep Stop enabled while paused? Yes, allow stopping while paused.
+                stopBtn.disabled = false;
+                showMessage("Timer paused.", "info", 5000); // Auto-hide
+            }
+        }
     }
 
 
     /** Handles Download CSV button click */
     function handleDownloadCSV() {
-        if (timerIntervalId) { showMessage("Timer running. Stop timer first to export.", "warning"); return; }
+        if (timerIntervalId || isPaused) { showMessage("Timer running or paused. Stop timer first to export.", "warning"); return; }
         clearMessage();
         window.location.href = '/log.csv';
-        showMessage('Attempting to download CSV...', 'info');
+        showMessage('Attempting to download CSV...', 'info', 3000); // Auto-hide
     }
 
     /** Handles Clear Log button click */
     async function handleClearLog() {
-        if (timerIntervalId) { showMessage("Timer running. Stop timer first to clear log.", "warning"); return; }
+        if (timerIntervalId || isPaused) { showMessage("Timer running or paused. Stop timer first to clear log.", "warning"); return; }
         clearMessage();
         const confirmation = prompt("This will permanently delete the log on the server. Type 'delete log' to confirm:");
         if (confirmation && confirmation.toLowerCase() === 'delete log') {
             try {
                 const response = await fetch('/clear-log', { method: 'POST' });
+                const responseText = await response.text(); // Get text first
                 if (!response.ok) {
-                    let errorText = `Server responded with ${response.status}`;
-                    try { errorText = await response.text(); } catch (e) {}
-                    throw new Error(errorText);
+                    throw new Error(responseText || `Server responded with ${response.status}`);
                 }
-                const data = await response.json();
-                showMessage(data.message || 'Server log cleared successfully. Reloading data...', 'success');
+                let message = 'Server log cleared successfully. Reloading data...';
+                try {
+                    const data = JSON.parse(responseText); // Try parsing JSON
+                    message = data.message || message;
+                } catch (e) {
+                    console.warn("Clear log response was not JSON:", responseText);
+                    // Use default message or text response if needed
+                }
+                showMessage(message, 'success', 3000); // Auto-hide
                 allLogData = [];
                 loadInitialData();
             } catch (err) {
@@ -1001,17 +1510,67 @@
                  showMessage(`Failed to delete log: ${err.message}`, 'error');
             }
         } else {
-            showMessage('Log deletion cancelled.', 'info');
+            showMessage('Log deletion cancelled.', 'info', 3000); // Auto-hide
         }
     }
 
+    /** Handles Set Ticker button click */
+    function handleSetTicker() {
+        tickerText = tickerInputElement.value.trim();
+        const tickerSpan = fullscreenTickerElement.querySelector('span');
+        if (tickerSpan) {
+             // Repeat text to fill width - adjust multiplier as needed
+            const repeatCount = tickerText ? 10 : 1; // Repeat more if there's text
+            const separator = '  •  '; // Separator between repeats
+            tickerSpan.textContent = tickerText ? (tickerText + separator).repeat(repeatCount) : ' ';
+        }
+        // Hide input, show link
+        tickerInputContainer.style.display = 'none';
+        changeTickerLink.style.display = 'block'; // Use block for centering
+        showMessage("Ticker text updated.", "info", 3000); // Auto-hide
+    }
+
+    /** Handles click on the "change ticker" link */
+    function handleChangeTickerLinkClick(event) {
+        event.preventDefault(); // Prevent default link behavior
+        changeTickerLink.style.display = 'none'; // Hide link
+        tickerInputContainer.style.display = 'flex'; // Show input container
+        tickerInputElement.focus(); // Focus input
+        tickerInputElement.select(); // Select existing text
+    }
+
+    /** Handles Theme Toggle button click */
+    function handleThemeToggle() {
+        document.body.classList.toggle('light-theme');
+        // Save preference
+        const isLight = document.body.classList.contains('light-theme');
+        localStorage.setItem('themePreference', isLight ? 'light' : 'dark');
+        themeToggleBtn.title = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+    }
+
+    /** Applies saved theme preference on load */
+    function applySavedTheme() {
+         const savedTheme = localStorage.getItem('themePreference');
+         if (savedTheme === 'light') {
+             document.body.classList.add('light-theme');
+             themeToggleBtn.title = 'Switch to Dark Mode';
+         } else {
+             document.body.classList.remove('light-theme'); // Default is dark
+             themeToggleBtn.title = 'Switch to Light Mode';
+         }
+    }
+
+
     // --- Auto Save ---
     setInterval(() => {
-      if (timerIntervalId && currentTask && currentElementSeconds > 0) {
+      if ((timerIntervalId || isPaused) && currentTask && currentElementStartTime) { // Include paused state
         const autoSaveEntry = {
           project: currentProject?.name || 'N/A', sprint: currentSprint?.name || 'N/A', task: currentTask.name,
           elementType: 'element_autosave', status: 'autosave',
-          currentElementSeconds: currentElementSeconds,
+          currentElementSeconds: currentElementSeconds, // Save the potentially inaccurate counter value
+          currentElementStartTime: currentElementStartTime, // Save the actual start time
+          isPaused: isPaused, // Save paused state
+          pauseStartTime: pauseStartTime, // Save pause start time if paused
           timestamp: new Date().toISOString(),
           projectDescription: currentProject?.description, projectStarted: currentProject?.started,
           sprintStarted: currentSprint?.started, taskStarted: currentTask.started,
@@ -1019,8 +1578,16 @@
           sprintTotalSeconds: currentSprint?.totalSeconds || 0, projectTotalSeconds: currentProject?.totalSeconds || 0
         };
         saveLogEntry(autoSaveEntry).then(saved => {
-            if (saved) console.log('Auto-saved element state.');
-            else console.warn('Auto-save failed.');
+            if (saved) {
+                console.log('Auto-saved element state.');
+            } else {
+                 console.warn('Auto-save indicated failure by server.');
+                 showMessage('Auto-save failed (server response).', 'warning', 5000); // Add user message
+            }
+        }).catch(err => {
+             // This catch is now less likely needed as saveLogEntry handles fetch errors
+             console.error('Unexpected error during auto-save promise:', err);
+             showMessage('Auto-save failed unexpectedly.', 'error');
         });
       }
     }, 60000);
@@ -1030,6 +1597,7 @@
     /** Fetches initial log data and sets up the UI */
     function loadInitialData() {
         clearMessage();
+        applySavedTheme(); // Apply theme preference first
         fetch('/load-log')
             .then(res => {
                 if (!res.ok) { throw new Error(`Failed to load log: ${res.status}`); }
@@ -1046,11 +1614,17 @@
                  selectedProjectNameSpan.textContent = ''; // Clear selected names
                  selectedSprintNameSpan.textContent = '';
                  selectedTaskNameSpan.textContent = '';
-                 elementTimerElement.textContent = '0:00';
+                 elementTimerElement.textContent = formatTimeHMS(0); // Use HMS format
                  elementCounterElement.textContent = '0';
-                 // Ensure complete button is initially disabled
+                 // Ensure control buttons are initially disabled
                  completeElementBtn.disabled = true;
                  completeElementBtn.title = "Start timer first";
+                 pausePlayBtn.disabled = true;
+                 pausePlayBtn.textContent = 'Pause';
+                 pausePlayBtn.title = 'Start timer first';
+                 stopBtn.disabled = true;
+                 stopBtn.title = 'Start timer first';
+
                  startProjectBtn.disabled = false; // Ensure project button is enabled initially
                  startProjectBtn.title = "Create new project or load project name from input field";
 
@@ -1064,6 +1638,7 @@
 
 
                  console.log("Log data loaded and UI initialized.");
+                 // TODO: Implement Auto-Save Recovery Logic Here if needed
             })
             .catch(error => {
                 console.error("Error loading initial data:", error);
@@ -1071,12 +1646,31 @@
             });
     }
 
+    // --- Page Visibility Handler ---
+    function handleVisibilityChange() {
+        // If tab becomes visible AND timer is running AND we have a start time
+        // AND it's not currently paused
+        if (!document.hidden && timerIntervalId && currentElementStartTime && !isPaused) {
+            const trueElapsedMillis = Date.now() - currentElementStartTime;
+            const trueElapsedSeconds = Math.floor(trueElapsedMillis / 1000);
+
+            // Correct if difference is more than 1 second (accounts for normal interval variance)
+            if (Math.abs(trueElapsedSeconds - currentElementSeconds) > 1) {
+                console.log(`Timer corrected on visibility change. Old: ${currentElementSeconds}s, New: ${trueElapsedSeconds}s`);
+                currentElementSeconds = trueElapsedSeconds;
+                elementTimerElement.textContent = formatTimeHMS(currentElementSeconds); // Use HMS format
+                showMessage("Timer corrected due to background throttling.", "info", 3000); // Auto-hide
+            }
+        }
+    }
+
+
     // --- Before Unload Warning ---
     window.addEventListener('beforeunload', (event) => {
-        if (timerIntervalId) {
+        if (timerIntervalId || isPaused) { // Also warn if paused
             event.preventDefault();
             event.returnValue = '';
-            return 'Timer is running. Are you sure you want to leave?';
+            return 'Timer is running or paused. Are you sure you want to leave?';
         }
     });
 
@@ -1085,6 +1679,7 @@
     projectSelect.addEventListener('change', handleProjectChange);
     sprintSelect.addEventListener('change', handleSprintChange);
     taskSelect.addEventListener('change', handleTaskChange);
+    taskNameInput.addEventListener('input', handleTaskInputChange); // Added listener for task input
 
     startProjectBtn.addEventListener('click', handleStartProject);
     startSprintBtn.addEventListener('click', handleStartSprint);
@@ -1092,22 +1687,31 @@
     completeElementBtn.addEventListener('click', handleCompleteElement);
     clearLogBtn.addEventListener('click', handleClearLog);
     downloadCSVBtn.addEventListener('click', handleDownloadCSV);
+    stopBtn.addEventListener('click', handleStopClick); // Added listener
+    pausePlayBtn.addEventListener('click', handlePausePlayClick); // Added listener
+    setTickerBtn.addEventListener('click', handleSetTicker); // Added listener
+    changeTickerLink.addEventListener('click', handleChangeTickerLinkClick); // Added listener
+    themeToggleBtn.addEventListener('click', handleThemeToggle); // Added listener
 
-    // Add listeners for sidebar collapse toggles
-    projectHeader.addEventListener('click', () => toggleSection(projectSetupSection));
-    sprintHeader.addEventListener('click', () => toggleSection(sprintSetupSection));
-    taskHeader.addEventListener('click', () => toggleSection(taskSetupSection));
+    // Add listeners for sidebar collapse toggles using event delegation
+    document.querySelector('.sidebar').addEventListener('click', (event) => {
+        if (event.target.classList.contains('toggle-section-btn')) {
+            const section = event.target.closest('.setup-section');
+            toggleSection(section);
+        }
+    });
 
     // Add listener for hierarchical log toggles (using event delegation)
     elementLogElement.addEventListener('click', (event) => {
-        const header = event.target.closest('.log-header');
-        if (header) {
-            const parentItem = header.closest('.log-item');
+        // Target only the specific button within the log header
+        if (event.target.classList.contains('log-item-toggle-btn')) {
+            const parentItem = event.target.closest('.log-item');
             if (parentItem) {
                 parentItem.classList.toggle('collapsed');
             }
         }
     });
+
 
     // Add listeners for log expand/collapse all buttons
     expandAllLogBtn.addEventListener('click', () => {
@@ -1117,8 +1721,35 @@
          elementLogElement.querySelectorAll('.log-item').forEach(item => item.classList.add('collapsed'));
     });
 
-    // Add listener for main log section toggle
-    logHeader.addEventListener('click', () => toggleSection(logSection));
+    // Add listener for main log section toggle button
+     logSection.querySelector('.toggle-section-btn').addEventListener('click', () => {
+        toggleSection(logSection);
+    });
+
+    // Add listener for Page Visibility
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Add listener for Fullscreen button
+    fullscreenBtn.addEventListener('click', () => {
+        document.body.classList.toggle('fullscreen-active');
+    });
+
+    // Add listener to exit fullscreen when clicking the background
+    timerContainerElement.addEventListener('click', (event) => {
+        // Check if the body has the fullscreen class and the click target is the container itself
+        if (document.body.classList.contains('fullscreen-active') && event.target === timerContainerElement) {
+            document.body.classList.remove('fullscreen-active');
+        }
+    });
+
+    // Add listener for instructions sidebar toggle
+    toggleInstructionsBtn.addEventListener('click', () => {
+        instructionsSidebar.classList.toggle('expanded');
+        const isExpanded = instructionsSidebar.classList.contains('expanded');
+        // Update arrow based on state
+        toggleInstructionsBtn.querySelector('.tab-arrow').textContent = isExpanded ? '>' : '<';
+        toggleInstructionsBtn.title = isExpanded ? 'Collapse Instructions' : 'Expand Instructions';
+    });
 
 
     // Initial load
